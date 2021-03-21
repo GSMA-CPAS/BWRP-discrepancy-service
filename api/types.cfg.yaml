@@ -1,0 +1,5 @@
+output:
+  discrepancy-types.gen.go
+generate:
+  - types
+package: api

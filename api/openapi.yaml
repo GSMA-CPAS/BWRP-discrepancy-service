@@ -1,0 +1,208 @@
+openapi: 3.0.1
+info:
+  contact:
+    email: lukasz.dudzinski@ovoo.pl
+  title: Discrepancy Service API
+  description: This is the REST API specification for the Discrepancy Service
+  version: 0.0.1
+servers:
+  - url: /api/v1/
+tags:
+- description: Access to usage discrepancy
+  name: usage
+- description: Access to settlement discrepancy
+  name: settlement
+    
+paths:
+  /usages/{usageId}:
+    put:
+      summary: Request usage discrepancy
+      description: Request usage discrepancy   
+      operationId: calculateUsageDiscrepancy
+      parameters:        
+        - name: usageId
+          in: path
+          description: home usage report ID
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: partnerUsageId
+          in: query
+          description: partner usage report ID
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        description: Home & partner usage reports
+        required: true
+        content:
+          application/json: {
+            schema: {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/Usage"
+                },
+                "minItems": 2,
+                "maxItems": 2
+            }
+          }
+        
+      responses:
+        '200':
+          description: Discrepancy report with home and partner perscpectives
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/UsageDiscrepancyReport'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+                
+  /usages/:              
+    get:
+      summary: Returns all pets
+      operationId: findUsages
+      
+      responses:
+        '200':
+          description: Discrepancy report with home and partner perscpective
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/Usage'
+        
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'        
+components:
+  schemas:
+    
+    Usage:
+      required:
+        - header
+      properties:
+        header:
+          type: object
+          description: Usage header
+          properties:
+            version:
+              type: string
+              description: Version of the document type
+            type:
+              type: string
+              description: Type of the document
+            mspOwner:
+              type: string
+              description: MSP owner
+            context:
+              type: string
+              description: Context
+        body:
+          type: object
+          description: Body of the Usage type object
+          properties:
+            inbound:
+              type: array
+              items: 
+                $ref: '#/components/schemas/UsageData'
+            outbound:
+              type: array
+              items: 
+                $ref: '#/components/schemas/UsageData'
+    UsageData:
+      properties:
+        yearMonth:
+          type: string
+        homeTadig:
+          type: string
+        visitorTadig:
+          type: string
+        service:
+          type: string
+        usage:
+          type: integer
+          format: int32
+    Error:
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+          description: Error code
+        message:
+          type: string
+          description: Error message
+    
+    GeneralInfoData:
+      properties:
+        service:
+          type: string
+        unit:
+          type: string
+        inbound_own_usage:
+          type: number
+          format: float
+        inbound_partner_usage:
+          type: number
+          format: float
+        inbound_discrepancy:
+          type: number
+          format: float
+        outbound_own_usage:
+          type: number
+          format: float
+        outbound_partner_usage:
+          type: number
+          format: float
+        outbound_discrepancy:
+          type: number
+          format: float
+    
+    UsageDiscrepancyData:
+      properties:
+        HTMN:
+          type: string
+        VPMN:
+          type: string
+        yearMonth:
+          type: string
+        service:
+          type: string
+        own_usage:
+          type: number
+          format: float
+        partner_usage:
+          type: number
+          format: float
+        delta_usage_abs:
+          type: number
+          format: float
+        delta_usage_percent:
+          type: number
+          format: float
+              
+    UsageDiscrepancyReport:
+      properties:
+        general_information:
+          type: array
+          items: 
+            $ref: '#/components/schemas/GeneralInfoData'
+        inbound:
+          type: array
+          items: 
+            $ref: '#/components/schemas/UsageDiscrepancyData'
+        outbound:
+          type: array
+          items: 
+            $ref: '#/components/schemas/UsageDiscrepancyData'
+
