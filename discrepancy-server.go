@@ -44,6 +44,16 @@ func main() {
 	// We now register our petStore above as the handler for the interface
 	api.RegisterHandlers(e, discrepancyService)
 
+	fmt.Println("Start")
+
+	// data, err := json.MarshalIndent(e.Routes(), "", "  ")
+	// if err != nil {
+
+	// }
+	// ioutil.WriteFile("routes.json", data, 0644)
+	// fmt.Println(e.Routes())
+
 	// And we serve HTTP until the world ends.
-	e.Logger.Fatal(e.Start(fmt.Sprintf("localhost:%d", *port)))
+	e.Logger.Fatal(e.Start(fmt.Sprintf("0.0.0.0:%d", *port)))
+
 }

@@ -18,6 +18,9 @@ import (
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Request settlement discrepancy
+	// (PUT /settlements/{settlementId})
+	CalculateSettlementDiscrepancy(ctx echo.Context, settlementId int32, params CalculateSettlementDiscrepancyParams) error
 	// Returns all pets
 	// (GET /usages/)
 	FindUsages(ctx echo.Context) error
@@ -29,6 +32,31 @@ type ServerInterface interface {
 // ServerInterfaceWrapper converts echo contexts to parameters.
 type ServerInterfaceWrapper struct {
 	Handler ServerInterface
+}
+
+// CalculateSettlementDiscrepancy converts echo context to params.
+func (w *ServerInterfaceWrapper) CalculateSettlementDiscrepancy(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "settlementId" -------------
+	var settlementId int32
+
+	err = runtime.BindStyledParameter("simple", false, "settlementId", ctx.Param("settlementId"), &settlementId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter settlementId: %s", err))
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params CalculateSettlementDiscrepancyParams
+	// ------------- Required query parameter "partnerSettlementId" -------------
+
+	err = runtime.BindQueryParameter("form", true, true, "partnerSettlementId", ctx.QueryParams(), &params.PartnerSettlementId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter partnerSettlementId: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.CalculateSettlementDiscrepancy(ctx, settlementId, params)
+	return err
 }
 
 // FindUsages converts echo context to params.
@@ -93,6 +121,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
+	router.PUT(baseURL+"/settlements/:settlementId", wrapper.CalculateSettlementDiscrepancy)
 	router.GET(baseURL+"/usages/", wrapper.FindUsages)
 	router.PUT(baseURL+"/usages/:usageId", wrapper.CalculateUsageDiscrepancy)
 
@@ -101,23 +130,28 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/8xWUW/bNhD+K8Rtj0LspsAe9LS26VY/ZAuStC9dENDS2WYrkQx5dOIG+u8DSclWJLpx",
-	"Ag/Yk2Ud7/jxu+876hEKVWslUZKF/BFsscKah8ePxijjH7RRGg0JDK8LVaL/LdEWRmgSSkIeF7MQy2Ch",
-	"TM0JchCS3p5CBrTRGP/iEg00GdRoLV/uLdSFt6mWjJBLaJoMDN45YbCE/Cu0G3bLb5oM/kSJhlczuVBn",
-	"nPj4AELOlZPlbSlsYVBzWWz86y3oRaU47XaWrp5HzF2iupe3rkN/eJrmhiSal6QqR6/Eus18Idht3ivQ",
-	"WjRrUYTFg65l4KSgRMD383O3w9M2zVW5GcvjvSo3TC0YrZCFROYrMjX/hoUHlWx1eCSsw7tfDS4gh18m",
-	"O+FPWtVPQsWgmmZ7Pm4M3/SpOUa13YsWeZPBCnmJZnzkeMw2mo3cKAkfaJz1oQ1k417UVv99L1NbnV9d",
-	"MBVCibT4YphyHeiPDSlV4WqUyU3XaGzIGBb4EgPDGqGvSf8PiBtMhJanm05Y6RmwUjVe81Isk2L9qZBH",
-	"ftg/5NbCClJm/0Yb5OZcSVr9zBpnO++nD/Pp+vyvZPkvF3sCJVbEo7Vv+dweZu9+kkZT+EYfNlNeNoKO",
-	"PHleyvElamVozPIy3iu3QkY8rZgPmgTDOykxXV43qgbSON7Ueq5wE7jzXHRTiBeBNKy5qCCHyn3n9sdJ",
-	"6cofQtrv4ne1VupEV1FJTybISlgmbHD/5cera/buYsasxkIsRBF4ZgtlQrgHi121Pc+ABFUeWiLqa0Fv",
-	"+MD0ZHryJvCiUXItIIe34ZXXHa0CO5OgPDuJXQ+n8kIIUGYl5PCHkGWgyYIfPlYraaNITqfT7VSO9uBa",
-	"V+0xJt9s1Eyk+qBGRI0+Jax/ThPUyu4FrZgfaozLkrUOYhqNLTQWJNYYeV9wV9HREMYvxARCJ/HB74sl",
-	"w3ZNBtbVNTcbyOESyRlpGa8qppFsCHesP4bfWdkEC7rE1XaJdw4tsbCQ9T+NskGjPvCqcBUnHIo6tNvw",
-	"GgmNhfzrcItAZazfMjw7A693yINOIAPJay+6Fi30byEyDrMeh89eFU02BNC1cA+GO4dmswPRrv58FCw3",
-	"MR0tvW8/wQ4Wy+EDJnyH8IdZTDjNoBZy92c4a4b6+uTb84+bTk9/Yymm7IiC5r826vgGOZZz7f/Luvu8",
-	"F2r5i7hzlDP+HphwLSbrNxPwuiK+TLntXVGgtYxU0tJ9o8HYKbtki0QVho/HZIVdHJqb5t8AAAD//yiJ",
-	"tZz6DgAA",
+	"H4sIAAAAAAAC/+xYXW/bNhf+KwTf91KI3BTYha/WJt3iCy9BnHYXXWDQ0rHNRiIZfjhxA//3gRRlKRKV",
+	"SK4zFNiuEos83+c855GecMJzwRkwrfD4CatkDTlx/54TTWYgNzQB+1NILkBqCu6Qkdw91VsBeIyVlpSt",
+	"8C7CG5IZd7LkMicaj/Ey40TjqLzKTL4AiXe7/RO++AaJtsKfpOSybSzhqVOZgkokFZpyhsfFZeTOosoa",
+	"Zfr9aWWNMg0ray7COShFVp2KyuOoGdMuwhLuDZWQ4vFX7A2W1293Ef4dGEiSTdiS26S1A6BswQ1L5ylV",
+	"iQRBWLLtk6JoL8gf2NyU3vcXE0RqBnKIKDf6QF/3kgOd3csd4K2q+rPViYZRHTiw9ZxenrWLdH35Zz+j",
+	"C5LcXfC8dy00SEZsr5Gsn0jGk75XhYScmvzQgZuB1hnkwHQ7HwuebtvDUkkgdyFqSC0lz1OiwyXxfWnP",
+	"/i9hicf4f3GFP7EHn7iy4fFH1fvkMGnNO7wKpWUNJAX5YvD+StSCKqbhUbdFz/xB1M5KrsTlAwvZm86u",
+	"EHdHAbHiQVPkZisA8SXSa0ApT4yrbUB6A1I5iaaCL8VBUwdyGqLXs7d71lbnFYqEoTGFTJN5QrLEZG5I",
+	"5gJk4huyB3g8sLpwz6HxQDNY8EC4CabjGgSXgbFb8xyuQCoBiaYbCGVME5oVe0VDrvrPQ7MYVfGIlGRr",
+	"f6+KVTanrMiGT82xDYWGzlflXxj7y8i8R7E2LzJSgt/PrX5UnWLlIPYKrM4CAzmbTWdtA9PLfuM0vTl0",
+	"b214kJX6vf5SPPaKM312mO1+1ftcUpg+K/UjT7cl3DpBh7XIa4vCXLJ3AZ3Grpav79Qf1TZkkRZh/rdD",
+	"u3bo81cOn6fbsrHCm9QujhuS0tVLcBBeXS3C3f0WtaGKai67DW2ByClnet2xDIsIXqMFFzfTP4Lqv1x1",
+	"HBREwoUyJwvVD4HqQoN5x4D3lCO/2gzNcRfX+JGN13zpDaDLYVD1+qI+ELVeXcwudzYXJQqRxCUNckIz",
+	"PMaZuSPq+0lq0u+UqTv6K99wfiKyopOeIciaKkSVm/7rT7Mb9OFqgiytoUuauDyjJZfuuOYWKhdthDXV",
+	"mXUtcGp14Rr44NHJ6OSdy4sARgTFY/zePbJ9p9cuO7Ha8wkVP1U/JunOtYUJwO013BtQGlW3Uf2jgLMn",
+	"XTCT1KKzZ9MQ5ELOGUly0CAVHn9tGrPoVbc0Oce2FnjsYsCR/+KE667jOkxqaSDy3696YdkuavrgpzTs",
+	"xr0Bua388Hdnx3PnthAHpT96muAWYYFIRIjMd078TRVjWikfSFHdwiSPk0LqNMI5ZdWP5lA0e/vCVuov",
+	"Mxqd/oLaGVOtLLhlpgRnqgCd09FoUHCDabdHu4Dr9WmS7hZ6oHqNXPMRlu7jESBV4t9CVDHeS2IyfTTH",
+	"iy+dARcNg0drGFIE/k6ElclzIrevz6S9HLslo+IC4J2fzwf1N8pSh4hFrd6oNAUFPlYRfq4aaCOZQiTL",
+	"kACtnmX9yf3tA6vuYj9Ebe6vXmBa6PcZ7oJT7+1bIWmHD2Es/XwUX94aRn1fHxtB65n6ZzG0gywOmFzP",
+	"89zwltwMlZ9qfkLwbE+e02UZdzlPRlrCFxNB4827GNuu0mQVmrUPSQJKIc2DA10fM9yek0q4k2S1eA/e",
+	"3e7+DgAA//8u/d9TtxsAAA==",
 }
 
 // GetSwagger returns the Swagger specification corresponding to the generated code
