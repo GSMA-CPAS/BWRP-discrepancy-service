@@ -51,7 +51,7 @@ paths:
         
       responses:
         '200':
-          description: Discrepancy report with home and partner perscpectives
+          description: Discrepancy report with inbound and outbound details
           content:
             application/json:
               schema:
@@ -81,7 +81,58 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'        
+                $ref: '#/components/schemas/Error'
+                
+  /settlements/{settlementId}:
+    put:
+      summary: Request settlement discrepancy
+      description: Request settlement discrepancy   
+      operationId: calculateSettlementDiscrepancy
+      parameters:        
+        - name: settlementId
+          in: path
+          description: home settlement ID
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: partnerSettlementId
+          in: query
+          description: partner settlement ID
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        description: Home & partner settlements
+        required: true
+        content:
+          application/json: {
+            schema: {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/Settlement"
+                },
+                "minItems": 2,
+                "maxItems": 2
+            }
+          } 
+      responses:
+        '200':
+          description: Discrepancy report with home and partner perscpectives
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/SettlementDiscrepancyReport'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  
+  
 components:
   schemas:
     
@@ -205,4 +256,138 @@ components:
           type: array
           items: 
             $ref: '#/components/schemas/UsageDiscrepancyData'
-
+    
+    Settlement:
+      properties:
+        header:
+          type: object
+          description: Settlement header
+          properties:
+            version:
+              type: string
+              description: Version of the document type
+            type:
+              type: string
+              description: Type of the document
+            mspOwner:
+              type: string
+              description: MSP owner
+            context:
+              type: string
+              description: Context
+        body:
+          type: object
+          description: Settlement body
+          properties:
+            fromdate:
+              type: string
+            todate:
+              type: string
+            inbound:
+              type: object
+              $ref: '#/components/schemas/SettlementServices'
+            outbound:
+              type: object
+              $ref: '#/components/schemas/SettlementServices'
+    
+    SettlementServices:
+        type: object
+        properties:
+            currency:
+              type: string
+            services:
+              type: object
+              properties:
+                voice:
+                  type: object
+                  properties:
+                    MOC:
+                      type: object
+                      $ref: '#/components/schemas/MOC'  
+                    MTC:
+                      type: number
+                      format: float
+                SMS:
+                  type: object
+                  properties:
+                    MO:
+                      type: number
+                      format: float
+                    MT:
+                      type: number
+                      format: float
+                Data:
+                  type: array
+                  items: 
+                    $ref: '#/components/schemas/DataService'
+                  
+    DataService:
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: number
+          format: float
+    
+    MOC:
+      type: object
+      properties:
+        local:
+          type: number
+          format: float
+        backHome:
+          type: number
+          format: float
+        international:
+          type: number
+          format: float
+        premium:
+          type: number
+          format: float
+        ROW:
+          type: number
+          format: float
+    
+    SettlementDiscrepancyReport:
+      type: object
+      properties:
+        homePerspective:
+          type: object
+          properties:
+            general_information:
+              type: array
+              items: 
+                $ref: '#/components/schemas/SettlementDiscrepancyData'
+            details:
+              type: array
+              items: 
+                $ref: '#/components/schemas/SettlementDiscrepancyData'
+        partnerPerspective:
+          type: object
+          properties:
+            general_information:
+              type: array
+              items: 
+                $ref: '#/components/schemas/SettlementDiscrepancyData'
+            details:
+              type: array
+              items: 
+                $ref: '#/components/schemas/SettlementDiscrepancyData'
+                
+    SettlementDiscrepancyData:
+      properties:
+        service:
+          type: string
+        unit:
+          type: string
+        own_calculation:
+          type: number
+          format: float
+        partner_calculation:
+          type: number
+          format: float
+        delta_calculation_percent:
+          type: number
+          format: float
+          

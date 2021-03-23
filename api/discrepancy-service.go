@@ -121,7 +121,7 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 }
 
 func (p *DiscrepancyServer) FindUsages(ctx echo.Context) error {
-	fmt.Println("Start")
+	fmt.Println("Start: FindUsages")
 
 	var usage Usage
 	dtag := "DTAG"
@@ -130,6 +130,51 @@ func (p *DiscrepancyServer) FindUsages(ctx echo.Context) error {
 	usage.Header.Version = &version
 
 	return ctx.JSON(http.StatusOK, usage)
+}
+
+func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, settlementId int32, params CalculateSettlementDiscrepancyParams) error {
+	fmt.Println("Start: CalculateSettlementDiscrepancy")
+
+	var bearerServiceData SettlementDiscrepancyData
+	bearerServiceData = SettlementDiscrepancyData{}
+
+	voice := "Voice"
+	bearerServiceData.Service = &voice
+
+	unit := "min"
+	bearerServiceData.Unit = &unit
+
+	// own calculation
+	var ownCalculation float32
+	ownCalculation = 4390.83
+	bearerServiceData.OwnCalculation = &ownCalculation
+
+	// partner calculation
+	var partnerCalculation float32
+	partnerCalculation = 4390.83
+	bearerServiceData.PartnerCalculation = &partnerCalculation
+
+	// delta calculation percent
+	var deltaCalculationPercent float32
+	deltaCalculationPercent = 4390.83
+	bearerServiceData.DeltaCalculationPercent = &deltaCalculationPercent
+
+	report := SettlementDiscrepancyReport{}
+
+	generalInfoArray := make([]SettlementDiscrepancyData, 0)
+	generalInfoArray = append(generalInfoArray, bearerServiceData)
+
+	report.HomePerspective = &(struct {
+		Details            *[]SettlementDiscrepancyData `json:"details,omitempty"`
+		GeneralInformation *[]SettlementDiscrepancyData `json:"general_information,omitempty"`
+	}{&generalInfoArray, &generalInfoArray})
+
+	fmt.Println(report.HomePerspective)
+	fmt.Println(*(report.HomePerspective))
+
+	// (*(settlementDiscrepancyReport.HomePerspective.GeneralInformation))[0] = bearerServiceData
+
+	return ctx.JSON(http.StatusOK, report)
 }
 
 // This function wraps sending of an error in the Error format, and
