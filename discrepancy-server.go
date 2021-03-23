@@ -54,6 +54,5 @@ func main() {
 	// fmt.Println(e.Routes())
 
 	// And we serve HTTP until the world ends.
-	e.Logger.Fatal(e.Start(fmt.Sprintf("0.0.0.0:%d", *port)))
-
+  e.Logger.Fatal(e.Start(fmt.Sprintf("0.0.0.0:%d", *port)))
 }
