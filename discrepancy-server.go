@@ -45,5 +45,5 @@ func main() {
 	api.RegisterHandlers(e, discrepancyService)
 
 	// And we serve HTTP until the world ends.
-	e.Logger.Fatal(e.Start(fmt.Sprintf("localhost:%d", *port)))
+	e.Logger.Fatal(e.Start(fmt.Sprintf("0.0.0.0:%d", *port)))
 }
