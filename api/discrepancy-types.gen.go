@@ -21,14 +21,14 @@ type Error struct {
 
 // GeneralInfoData defines model for GeneralInfoData.
 type GeneralInfoData struct {
-	InboundDiscrepancy   *float32 `json:"inbound_discrepancy,omitempty"`
-	InboundOwnUsage      *float32 `json:"inbound_own_usage,omitempty"`
-	InboundPartnerUsage  *float32 `json:"inbound_partner_usage,omitempty"`
-	OutboundDiscrepancy  *float32 `json:"outbound_discrepancy,omitempty"`
-	OutboundOwnUsage     *float32 `json:"outbound_own_usage,omitempty"`
-	OutboundPartnerUsage *float32 `json:"outbound_partner_usage,omitempty"`
-	Service              *string  `json:"service,omitempty"`
-	Unit                 *string  `json:"unit,omitempty"`
+	InboundDiscrepancy   float32 `json:"inbound_discrepancy"`
+	InboundOwnUsage      float32 `json:"inbound_own_usage"`
+	InboundPartnerUsage  float32 `json:"inbound_partner_usage"`
+	OutboundDiscrepancy  float32 `json:"outbound_discrepancy"`
+	OutboundOwnUsage     float32 `json:"outbound_own_usage"`
+	OutboundPartnerUsage float32 `json:"outbound_partner_usage"`
+	Service              string  `json:"service"`
+	Unit                 string  `json:"unit"`
 }
 
 // MOC defines model for MOC.
@@ -109,35 +109,36 @@ type SettlementServices struct {
 type Usage struct {
 
 	// Body of the Usage type object
-	Body *struct {
-		Inbound  *[]UsageData `json:"inbound,omitempty"`
-		Outbound *[]UsageData `json:"outbound,omitempty"`
-	} `json:"body,omitempty"`
+	Body struct {
+		Inbound  []UsageData `json:"inbound"`
+		Outbound []UsageData `json:"outbound"`
+	} `json:"body"`
 
 	// Usage header
 	Header struct {
 
 		// Context
-		Context *string `json:"context,omitempty"`
+		Context string `json:"context"`
 
 		// MSP owner
 		MspOwner *string `json:"mspOwner,omitempty"`
 
 		// Type of the document
-		Type *string `json:"type,omitempty"`
+		Type string `json:"type"`
 
 		// Version of the document type
-		Version *string `json:"version,omitempty"`
+		Version string `json:"version"`
 	} `json:"header"`
 }
 
 // UsageData defines model for UsageData.
 type UsageData struct {
-	HomeTadig    *string `json:"homeTadig,omitempty"`
-	Service      *string `json:"service,omitempty"`
-	Usage        *int32  `json:"usage,omitempty"`
-	VisitorTadig *string `json:"visitorTadig,omitempty"`
-	YearMonth    *string `json:"yearMonth,omitempty"`
+	HomeTadig    *string  `json:"homeTadig,omitempty"`
+	Service      *string  `json:"service,omitempty"`
+	Unit         *string  `json:"unit,omitempty"`
+	Usage        *float32 `json:"usage,omitempty"`
+	VisitorTadig *string  `json:"visitorTadig,omitempty"`
+	YearMonth    *string  `json:"yearMonth,omitempty"`
 }
 
 // UsageDiscrepancyData defines model for UsageDiscrepancyData.

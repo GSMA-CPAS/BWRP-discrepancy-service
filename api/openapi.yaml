@@ -139,8 +139,13 @@ components:
     Usage:
       required:
         - header
+        - body
       properties:
         header:
+          required:
+            - version
+            - type
+            - context
           type: object
           description: Usage header
           properties:
@@ -157,6 +162,9 @@ components:
               type: string
               description: Context
         body:
+          required:
+            - inbound
+            - outbound
           type: object
           description: Body of the Usage type object
           properties:
@@ -179,8 +187,10 @@ components:
         service:
           type: string
         usage:
-          type: integer
-          format: int32
+          type: number
+          format: float
+        unit:
+          type: string
     Error:
       required:
         - code
@@ -195,6 +205,15 @@ components:
           description: Error message
     
     GeneralInfoData:
+      required:
+        - service
+        - unit
+        - inbound_own_usage
+        - inbound_partner_usage
+        - inbound_discrepancy
+        - outbound_own_usage
+        - outbound_partner_usage
+        - outbound_discrepancy
       properties:
         service:
           type: string
