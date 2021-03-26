@@ -1,0 +1,78 @@
+{
+  "general_information": [
+    {
+      "inbound_discrepancy": 117.28125,
+      "inbound_own_usage": 23573.98,
+      "inbound_partner_usage": 23456.7,
+      "outbound_discrepancy": 593.8281,
+      "outbound_own_usage": 45085.07,
+      "outbound_partner_usage": 45678.9,
+      "service": "MOC",
+      "unit": "min"
+    },
+    {
+      "inbound_discrepancy": 0,
+      "inbound_own_usage": 0,
+      "inbound_partner_usage": 0,
+      "outbound_discrepancy": 0,
+      "outbound_own_usage": 0,
+      "outbound_partner_usage": 0,
+      "service": "SMS",
+      "unit": "#"
+    },
+    {
+      "inbound_discrepancy": 641.98047,
+      "inbound_own_usage": 48740.74,
+      "inbound_partner_usage": 49382.72,
+      "outbound_discrepancy": 58.640625,
+      "outbound_own_usage": 11787.03,
+      "outbound_partner_usage": 11728.39,
+      "service": "Data",
+      "unit": "MB"
+    }
+  ],
+  "inbound": [
+    {
+      "HTMN": "FRAF1",
+      "VPMN": "DEUD1",
+      "delta_usage_abs": 117.28125,
+      "delta_usage_percent": 0.49750298,
+      "own_usage": 23573.98,
+      "partner_usage": 23456.7,
+      "service": "MOC Local",
+      "yearMonth": "202001"
+    },
+    {
+      "HTMN": "BELMO",
+      "VPMN": "DEUD1",
+      "delta_usage_abs": 641.98047,
+      "delta_usage_percent": -1.3171333,
+      "own_usage": 48740.74,
+      "partner_usage": 49382.72,
+      "service": "GPRS",
+      "yearMonth": "202002"
+    }
+  ],
+  "outbound": [
+    {
+      "HTMN": "DEUD1",
+      "VPMN": "BELMO",
+      "delta_usage_abs": 58.640625,
+      "delta_usage_percent": 0.49750125,
+      "own_usage": 11787.03,
+      "partner_usage": 11728.39,
+      "service": "GPRS",
+      "yearMonth": "202002"
+    },
+    {
+      "HTMN": "DEUD1",
+      "VPMN": "FRAF1",
+      "delta_usage_abs": 593.8281,
+      "delta_usage_percent": -1.3171281,
+      "own_usage": 45085.07,
+      "partner_usage": 45678.9,
+      "service": "MOC Local",
+      "yearMonth": "202001"
+    }
+  ]
+}
