@@ -53,21 +53,20 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 	fmt.Println(partnerUsage.Header.Context)
 
 	// create output usage discrepancy report
-	var report UsageDiscrepancyReport
-	report = UsageDiscrepancyReport{}
+	report := UsageDiscrepancyReport{}
 
 	// general information
-	generalInformationMap := make(map[string]*GeneralInfoData, 0)
+	aggregatedSubServicesMap := make(map[string]*GeneralInfoData, 0)
 
 	// general information - inbound own usage
 	for _, usageDataRecord := range ownUsage.Body.Inbound {
-		value, ok := generalInformationMap[*usageDataRecord.Service]
+		value, ok := aggregatedSubServicesMap[*usageDataRecord.Service]
 		if !ok {
 			generalInfoData := GeneralInfoData{}
 			generalInfoData.Service = *usageDataRecord.Service
 			generalInfoData.Unit = *usageDataRecord.Unit
 			generalInfoData.InboundOwnUsage = *usageDataRecord.Usage
-			generalInformationMap[*usageDataRecord.Service] = &generalInfoData
+			aggregatedSubServicesMap[*usageDataRecord.Service] = &generalInfoData
 
 		} else {
 			summary := value.InboundOwnUsage + *usageDataRecord.Usage
@@ -75,32 +74,32 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 		}
 	}
 
-	// general information - outbound partner usage
+	// general information - inbound partner usage
 	for _, usageDataRecord := range partnerUsage.Body.Outbound {
-		generalInfoRecord, ok := generalInformationMap[*usageDataRecord.Service]
+		value, ok := aggregatedSubServicesMap[*usageDataRecord.Service]
 		if !ok {
 			generalInfoData := GeneralInfoData{}
 			generalInfoData.Service = *usageDataRecord.Service
 			generalInfoData.Unit = *usageDataRecord.Unit
 			generalInfoData.InboundPartnerUsage = *usageDataRecord.Usage
-			generalInformationMap[*usageDataRecord.Service] = &generalInfoData
+			aggregatedSubServicesMap[*usageDataRecord.Service] = &generalInfoData
 
 		} else {
-			summary := generalInfoRecord.InboundPartnerUsage + *(usageDataRecord.Usage)
-			generalInfoRecord.InboundPartnerUsage = summary
+			summary := value.InboundPartnerUsage + *(usageDataRecord.Usage)
+			value.InboundPartnerUsage = summary
 
 		}
 	}
 
 	// general information - outbound own usage
 	for _, usageDataRecord := range ownUsage.Body.Outbound {
-		value, ok := generalInformationMap[*usageDataRecord.Service]
+		value, ok := aggregatedSubServicesMap[*usageDataRecord.Service]
 		if !ok {
 			generalInfoData := GeneralInfoData{}
 			generalInfoData.Service = *usageDataRecord.Service
 			generalInfoData.Unit = *usageDataRecord.Unit
 			generalInfoData.OutboundOwnUsage = *usageDataRecord.Usage
-			generalInformationMap[*usageDataRecord.Service] = &generalInfoData
+			aggregatedSubServicesMap[*usageDataRecord.Service] = &generalInfoData
 
 		} else {
 			summary := value.OutboundOwnUsage + *(usageDataRecord.Usage)
@@ -110,13 +109,13 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 
 	// general information - outbound partner usage
 	for _, usageDataRecord := range partnerUsage.Body.Inbound {
-		value, ok := generalInformationMap[*usageDataRecord.Service]
+		value, ok := aggregatedSubServicesMap[*usageDataRecord.Service]
 		if !ok {
 			generalInfoData := GeneralInfoData{}
 			generalInfoData.Service = *usageDataRecord.Service
 			generalInfoData.Unit = *usageDataRecord.Unit
 			generalInfoData.OutboundPartnerUsage = *usageDataRecord.Usage
-			generalInformationMap[*usageDataRecord.Service] = &generalInfoData
+			aggregatedSubServicesMap[*usageDataRecord.Service] = &generalInfoData
 
 		} else {
 
@@ -127,9 +126,9 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 	}
 
 	// create general information array for sub-services
-	generalInformationSubServiceArray := make([]GeneralInfoData, 0, len(generalInformationMap))
+	generalInformationSubServiceArray := make([]GeneralInfoData, 0, len(aggregatedSubServicesMap))
 
-	for _, value := range generalInformationMap {
+	for _, value := range aggregatedSubServicesMap {
 		generalInformationSubServiceArray = append(generalInformationSubServiceArray, *value)
 	}
 
@@ -309,84 +308,6 @@ func makeUsageIdentifier(usageData UsageData) string {
 	return (*usageData.HomeTadig + *usageData.VisitorTadig + *usageData.Service + *usageData.YearMonth)
 }
 
-func (p *DiscrepancyServer) CreateUsageDiscrepancyReport() UsageDiscrepancyReport {
-
-	// create usage discrepancy report
-	usageDiscrepancyData := UsageDiscrepancyData{}
-	hpmn := "DTAG"
-	usageDiscrepancyData.HTMN = &hpmn
-	vpmn := "DTAG"
-	usageDiscrepancyData.VPMN = &vpmn
-	service := "MOC Back Home"
-	usageDiscrepancyData.Service = &service
-	year_month := "202003"
-	usageDiscrepancyData.YearMonth = &year_month
-
-	// own usage
-	var ownUsage float32
-	ownUsage = 100.0
-	usageDiscrepancyData.OwnUsage = &ownUsage
-	// partner usage
-	var partnerUsage float32
-	partnerUsage = 110.0
-	usageDiscrepancyData.PartnerUsage = &partnerUsage
-	// delta usage abs
-	var deltaUsageAbs float32
-	deltaUsageAbs = 45.7
-	usageDiscrepancyData.DeltaUsageAbs = &deltaUsageAbs
-	// delta usage percent
-	var deltaUsagePercent float32
-	deltaUsagePercent = 10.5
-	usageDiscrepancyData.DeltaUsagePercent = &deltaUsagePercent
-
-	var report UsageDiscrepancyReport
-	report = UsageDiscrepancyReport{}
-
-	var generalInfo GeneralInfoData
-	generalInfo = GeneralInfoData{}
-
-	bearerService := "MOC"
-	generalInfo.Service = bearerService
-
-	units := "min"
-	generalInfo.Unit = units
-
-	var inbound_own_usage float32
-	inbound_own_usage = 300.00
-	var inbound_partner_usage float32
-	inbound_partner_usage = 330.00
-	var inbound_discrepancy float32
-	inbound_discrepancy = 30.00
-	var outbound_own_usage float32
-	outbound_own_usage = 600.00
-	var outbound_partner_usage float32
-	outbound_partner_usage = 630.00
-	var outbound_discrepancy float32
-	outbound_discrepancy = 30.00
-
-	generalInfo.InboundOwnUsage = inbound_own_usage
-	generalInfo.InboundPartnerUsage = inbound_partner_usage
-	generalInfo.InboundDiscrepancy = inbound_discrepancy
-	generalInfo.OutboundOwnUsage = outbound_own_usage
-	generalInfo.OutboundPartnerUsage = outbound_partner_usage
-	generalInfo.OutboundDiscrepancy = outbound_discrepancy
-
-	generalInfoArray := make([]GeneralInfoData, 0)
-	generalInfoArray = append(generalInfoArray, generalInfo)
-	report.GeneralInformation = &generalInfoArray
-
-	inbound := make([]UsageDiscrepancyData, 0)
-	inbound = append(inbound, usageDiscrepancyData)
-	report.Inbound = &inbound
-
-	outbound := make([]UsageDiscrepancyData, 0)
-	outbound = append(outbound, usageDiscrepancyData)
-	report.Outbound = &outbound
-
-	return report
-
-}
-
 func (p *DiscrepancyServer) FindUsages(ctx echo.Context) error {
 	fmt.Println("Start: FindUsages")
 
@@ -402,46 +323,216 @@ func (p *DiscrepancyServer) FindUsages(ctx echo.Context) error {
 func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, settlementId int32, params CalculateSettlementDiscrepancyParams) error {
 	fmt.Println("Start: CalculateSettlementDiscrepancy")
 
-	var bearerServiceData SettlementDiscrepancyData
-	bearerServiceData = SettlementDiscrepancyData{}
+	// retrieve two settlements from the request body
+	body, err := ioutil.ReadAll(ctx.Request().Body)
+	if err != nil {
+		return ctx.NoContent(http.StatusNotAcceptable)
+	}
 
-	voice := "Voice"
-	bearerServiceData.Service = &voice
+	var req []Settlement // the non-struct body
+	if body != nil {
+		err := json.Unmarshal(body, &req)
+		if err != nil {
+			return ctx.NoContent(http.StatusNotAcceptable)
+		}
+	} else {
+		return ctx.NoContent(http.StatusNotAcceptable)
+	}
 
-	unit := "min"
-	bearerServiceData.Unit = &unit
+	homeSettlement := req[0] // assumption: first settlement is a home one
+	partnerSettlement := req[1]
 
-	// own calculation
-	var ownCalculation float32
-	ownCalculation = 4390.83
-	bearerServiceData.OwnCalculation = &ownCalculation
+	fmt.Println(homeSettlement.Header.Context)
+	fmt.Println(partnerSettlement.Header.Context)
 
-	// partner calculation
-	var partnerCalculation float32
-	partnerCalculation = 4390.83
-	bearerServiceData.PartnerCalculation = &partnerCalculation
+	// home inbound
+	homeInboundVoiceServicesMap := createVoiceServicesMap(homeSettlement.Body.Inbound)
+	homeInboundSmsServicesMap := createSMSServicesMap(homeSettlement.Body.Inbound)
+	homeInboundDataServicesMap := createDataServicesMap(homeSettlement.Body.Inbound)
+	// home outbound
+	homeOutboundVoiceServicesMap := createVoiceServicesMap(homeSettlement.Body.Outbound)
+	homeOutboundSmsServicesMap := createSMSServicesMap(homeSettlement.Body.Outbound)
+	homeOutboundDataServicesMap := createDataServicesMap(homeSettlement.Body.Outbound)
 
-	// delta calculation percent
-	var deltaCalculationPercent float32
-	deltaCalculationPercent = 4390.83
-	bearerServiceData.DeltaCalculationPercent = &deltaCalculationPercent
+	// partner outbound
+	partnerOutboundVoiceServicesMap := createVoiceServicesMap(partnerSettlement.Body.Outbound)
+	partnerOutboundSmsServicesMap := createSMSServicesMap(partnerSettlement.Body.Outbound)
+	partnerOutboundDataServicesMap := createDataServicesMap(partnerSettlement.Body.Outbound)
+	// partner inbound
+	partnerInboundVoiceServicesMap := createVoiceServicesMap(partnerSettlement.Body.Inbound)
+	partnerInboundSmsServicesMap := createSMSServicesMap(partnerSettlement.Body.Inbound)
+	partnerInboundDataServicesMap := createDataServicesMap(partnerSettlement.Body.Inbound)
 
+	// HOME PERSPECTIVE
+	// Home Perspective details: home inbound & partner outbound
+	homePerspectiveDetails := make([]SettlementDiscrepancyRecord, 0)
+
+	// voice sub-services details
+	createSubServicesDetails(homeInboundVoiceServicesMap, partnerOutboundVoiceServicesMap, "min", &homePerspectiveDetails)
+
+	// SMS sub-services details
+	createSubServicesDetails(homeInboundSmsServicesMap, partnerOutboundSmsServicesMap, "SMS", &homePerspectiveDetails)
+
+	// data sub-services details
+	createSubServicesDetails(homeInboundDataServicesMap, partnerOutboundDataServicesMap, "MB", &homePerspectiveDetails)
+
+	// Home Perspective general information: home inbound & partner outbound
+	homePerspectiveGeneralInfo := make([]SettlementDiscrepancyRecord, 0)
+
+	// voice general information
+	createGeneralInformation(homeInboundVoiceServicesMap, partnerOutboundVoiceServicesMap, "Voice", "min", &homePerspectiveGeneralInfo)
+
+	// SMS general information
+	createGeneralInformation(homeInboundSmsServicesMap, partnerOutboundSmsServicesMap, "SMS", "SMS", &homePerspectiveGeneralInfo)
+
+	// data general information
+	createGeneralInformation(homeInboundDataServicesMap, partnerOutboundDataServicesMap, "Data", "MB", &homePerspectiveGeneralInfo)
+
+	// PARTNER PERSPECTIVE
+	// Partner Perspective details: partner inbound & home outbound
+	partnerPerspectiveDetails := make([]SettlementDiscrepancyRecord, 0)
+
+	// voice sub-services details
+	createSubServicesDetails(partnerInboundVoiceServicesMap, homeOutboundVoiceServicesMap, "min", &partnerPerspectiveDetails)
+
+	// SMS sub-services details
+	createSubServicesDetails(partnerInboundSmsServicesMap, homeOutboundSmsServicesMap, "SMS", &partnerPerspectiveDetails)
+
+	// data sub-services details
+	createSubServicesDetails(partnerInboundDataServicesMap, homeOutboundDataServicesMap, "MB", &partnerPerspectiveDetails)
+
+	// Partner Perspective general information: partner inbound & home outbound
+	partnerPerspectiveGeneralInfo := make([]SettlementDiscrepancyRecord, 0)
+
+	// voice general information
+	createGeneralInformation(partnerInboundVoiceServicesMap, homeOutboundVoiceServicesMap, "Voice", "min", &partnerPerspectiveGeneralInfo)
+
+	// SMS general information
+	createGeneralInformation(partnerInboundSmsServicesMap, homeOutboundSmsServicesMap, "SMS", "SMS", &partnerPerspectiveGeneralInfo)
+
+	// data general information
+	createGeneralInformation(partnerInboundDataServicesMap, homeOutboundDataServicesMap, "Data", "MB", &partnerPerspectiveGeneralInfo)
+
+	// create final report
 	report := SettlementDiscrepancyReport{}
 
-	generalInfoArray := make([]SettlementDiscrepancyData, 0)
-	generalInfoArray = append(generalInfoArray, bearerServiceData)
-
 	report.HomePerspective = &(struct {
-		Details            *[]SettlementDiscrepancyData `json:"details,omitempty"`
-		GeneralInformation *[]SettlementDiscrepancyData `json:"general_information,omitempty"`
-	}{&generalInfoArray, &generalInfoArray})
+		Details            []SettlementDiscrepancyRecord `json:"details"`
+		GeneralInformation []SettlementDiscrepancyRecord `json:"general_information"`
+	}{homePerspectiveDetails, homePerspectiveGeneralInfo})
 
-	fmt.Println(report.HomePerspective)
-	fmt.Println(*(report.HomePerspective))
-
-	// (*(settlementDiscrepancyReport.HomePerspective.GeneralInformation))[0] = bearerServiceData
+	report.PartnerPerspective = &(struct {
+		Details            []SettlementDiscrepancyRecord `json:"details"`
+		GeneralInformation []SettlementDiscrepancyRecord `json:"general_information"`
+	}{partnerPerspectiveDetails, partnerPerspectiveGeneralInfo})
 
 	return ctx.JSON(http.StatusOK, report)
+}
+
+func createSubServicesDetails(ownMap, partnerMap map[string]float32, units string, details *[]SettlementDiscrepancyRecord) {
+	for key, ownCalculation := range ownMap {
+		partnerCalculation := partnerMap[key]
+		var discrepancyRecord = SettlementDiscrepancyRecord{}
+		discrepancyRecord.Service = key
+		discrepancyRecord.Unit = units
+		discrepancyRecord.OwnCalculation = ownCalculation
+		discrepancyRecord.PartnerCalculation = partnerCalculation
+		discrepancyRecord.DeltaCalculationPercent = calculateRelativeDelta(ownCalculation, partnerCalculation)
+		*details = append(*details, discrepancyRecord)
+	}
+}
+
+func createGeneralInformation(ownMap, partnerMap map[string]float32, service, units string, generalInfoArr *[]SettlementDiscrepancyRecord) {
+	ownCalculationTotalAmount := float32(0)
+	for _, value := range ownMap {
+		ownCalculationTotalAmount += value
+	}
+	partnerCalculationTotalAmount := float32(0)
+	for _, value := range partnerMap {
+		partnerCalculationTotalAmount += value
+	}
+	discrepancyRecord := SettlementDiscrepancyRecord{}
+	discrepancyRecord.Service = service
+	discrepancyRecord.Unit = units
+	discrepancyRecord.OwnCalculation = ownCalculationTotalAmount
+	discrepancyRecord.PartnerCalculation = partnerCalculationTotalAmount
+	discrepancyRecord.DeltaCalculationPercent = calculateRelativeDelta(ownCalculationTotalAmount, partnerCalculationTotalAmount)
+	*generalInfoArr = append(*generalInfoArr, discrepancyRecord)
+}
+
+func calculateRelativeDelta(A, B float32) float32 {
+	// relative delta
+	// [ (A-B) / A] x 100
+	C := ((A - B) / A) * 100.0
+	return C
+}
+
+func createVoiceServicesMap(input SettlementServices) map[string]float32 {
+	fmt.Println("Voice services values:")
+
+	fmt.Println(input.Services.Voice.MOC.BackHome)
+	fmt.Println(input.Services.Voice.MOC.International)
+	fmt.Println(input.Services.Voice.MOC.Local)
+	fmt.Println(input.Services.Voice.MOC.Premium)
+	fmt.Println(input.Services.Voice.MOC.ROW)
+
+	voiceServicesMap := make(map[string]float32, 0)
+
+	backHome := input.Services.Voice.MOC.BackHome
+	local := input.Services.Voice.MOC.Local
+	premium := input.Services.Voice.MOC.Premium
+	international := input.Services.Voice.MOC.International
+	ROW := input.Services.Voice.MOC.ROW
+
+	if backHome != nil {
+		fmt.Printf("backHome: %f\n", *backHome)
+		voiceServicesMap["MOC Back Home"] = *backHome
+	}
+	if local != nil {
+		fmt.Printf("local: %f\n", *local)
+		voiceServicesMap["MOC Local"] = *local
+	}
+	if premium != nil {
+		fmt.Printf("premium: %f\n", *premium)
+		voiceServicesMap["MOC Premium"] = *premium
+	}
+	if international != nil {
+		fmt.Printf("international: %f\n", *international)
+		voiceServicesMap["MOC International"] = *international
+	}
+	if ROW != nil {
+		fmt.Printf("ROW: %f\n", *ROW)
+	}
+
+	// TODO: Add support for MTC
+
+	return voiceServicesMap
+}
+
+func createSMSServicesMap(input SettlementServices) map[string]float32 {
+	smsMO := input.Services.SMS.MO
+	smsMT := input.Services.SMS.MT
+
+	smsServicesMap := make(map[string]float32, 0)
+
+	if smsMO != nil {
+		smsServicesMap["SMSMO"] = *smsMO
+	}
+	if smsMT != nil {
+		smsServicesMap["SMSMT"] = *smsMT
+	}
+
+	return smsServicesMap
+}
+
+func createDataServicesMap(input SettlementServices) map[string]float32 {
+	dataServicesMap := make(map[string]float32, 0)
+
+	for _, element := range input.Services.Data {
+		dataServicesMap[*element.Name] = *element.Value
+	}
+
+	return dataServicesMap
 }
 
 // This function wraps sending of an error in the Error format, and
