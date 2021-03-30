@@ -1,0 +1,54 @@
+{
+"header": {
+      "version": "1.0",
+      "type": "usage",
+      "mspOwner": "DTAG",
+      "context": "home"
+    },
+    "body": {
+      "inbound": [
+        {
+          "yearMonth": "202001",
+          "homeTadig": "FRAF1",
+          "visitorTadig": "DEUD1",
+          "service": "MOC Local",
+          "usage": 23573.98,
+    	  "unit": "min"
+        },
+        {
+          "yearMonth": "202002",
+          "homeTadig": "BELMO",
+          "visitorTadig": "DEUD1",
+          "service": "GPRS",
+          "usage": 48740.74,
+    	  "unit": "MB"
+        },
+        {
+          "yearMonth": "202002",
+          "homeTadig": "BELMO",
+          "visitorTadig": "DEUD1",
+          "service": "SMSMO",
+          "usage": 4874,
+    	  "unit": "SMS"
+        }
+      ],
+      "outbound": [
+        {
+          "yearMonth": "202002",
+          "homeTadig": "DEUD1",
+          "visitorTadig": "BELMO",
+          "service": "GPRS",
+          "usage": 11787.03,
+          "unit": "MB"
+        },
+        {
+          "yearMonth": "202001",
+          "homeTadig": "DEUD1",
+          "visitorTadig": "FRAF1",
+          "service": "MOC Local",
+          "usage": 45085.07,
+          "unit": "min"
+        }
+      ]
+    }
+ }

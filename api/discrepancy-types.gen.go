@@ -44,65 +44,65 @@ type MOC struct {
 type Settlement struct {
 
 	// Settlement body
-	Body *struct {
-		Fromdate *string             `json:"fromdate,omitempty"`
-		Inbound  *SettlementServices `json:"inbound,omitempty"`
-		Outbound *SettlementServices `json:"outbound,omitempty"`
-		Todate   *string             `json:"todate,omitempty"`
-	} `json:"body,omitempty"`
+	Body struct {
+		Fromdate *string            `json:"fromdate,omitempty"`
+		Inbound  SettlementServices `json:"inbound"`
+		Outbound SettlementServices `json:"outbound"`
+		Todate   *string            `json:"todate,omitempty"`
+	} `json:"body"`
 
 	// Settlement header
-	Header *struct {
+	Header struct {
 
 		// Context
-		Context *string `json:"context,omitempty"`
+		Context string `json:"context"`
 
 		// MSP owner
-		MspOwner *string `json:"mspOwner,omitempty"`
+		MspOwner string `json:"mspOwner"`
 
 		// Type of the document
-		Type *string `json:"type,omitempty"`
+		Type string `json:"type"`
 
 		// Version of the document type
-		Version *string `json:"version,omitempty"`
-	} `json:"header,omitempty"`
+		Version string `json:"version"`
+	} `json:"header"`
 }
 
-// SettlementDiscrepancyData defines model for SettlementDiscrepancyData.
-type SettlementDiscrepancyData struct {
-	DeltaCalculationPercent *float32 `json:"delta_calculation_percent,omitempty"`
-	OwnCalculation          *float32 `json:"own_calculation,omitempty"`
-	PartnerCalculation      *float32 `json:"partner_calculation,omitempty"`
-	Service                 *string  `json:"service,omitempty"`
-	Unit                    *string  `json:"unit,omitempty"`
+// SettlementDiscrepancyRecord defines model for SettlementDiscrepancyRecord.
+type SettlementDiscrepancyRecord struct {
+	DeltaCalculationPercent float32 `json:"delta_calculation_percent"`
+	OwnCalculation          float32 `json:"own_calculation"`
+	PartnerCalculation      float32 `json:"partner_calculation"`
+	Service                 string  `json:"service"`
+	Unit                    string  `json:"unit"`
 }
 
 // SettlementDiscrepancyReport defines model for SettlementDiscrepancyReport.
 type SettlementDiscrepancyReport struct {
 	HomePerspective *struct {
-		Details            *[]SettlementDiscrepancyData `json:"details,omitempty"`
-		GeneralInformation *[]SettlementDiscrepancyData `json:"general_information,omitempty"`
+		Details            []SettlementDiscrepancyRecord `json:"details"`
+		GeneralInformation []SettlementDiscrepancyRecord `json:"general_information"`
 	} `json:"homePerspective,omitempty"`
 	PartnerPerspective *struct {
-		Details            *[]SettlementDiscrepancyData `json:"details,omitempty"`
-		GeneralInformation *[]SettlementDiscrepancyData `json:"general_information,omitempty"`
+		Details            []SettlementDiscrepancyRecord `json:"details"`
+		GeneralInformation []SettlementDiscrepancyRecord `json:"general_information"`
 	} `json:"partnerPerspective,omitempty"`
 }
 
 // SettlementServices defines model for SettlementServices.
 type SettlementServices struct {
-	Currency *string `json:"currency,omitempty"`
-	Services *struct {
-		Data *[]DataService `json:"Data,omitempty"`
-		SMS  *struct {
+	Currency string `json:"currency"`
+	Services struct {
+		Data []DataService `json:"Data"`
+		SMS  struct {
 			MO *float32 `json:"MO,omitempty"`
 			MT *float32 `json:"MT,omitempty"`
-		} `json:"SMS,omitempty"`
-		Voice *struct {
+		} `json:"SMS"`
+		Voice struct {
 			MOC *MOC     `json:"MOC,omitempty"`
 			MTC *float32 `json:"MTC,omitempty"`
-		} `json:"voice,omitempty"`
-	} `json:"services,omitempty"`
+		} `json:"voice"`
+	} `json:"services"`
 }
 
 // Usage defines model for Usage.

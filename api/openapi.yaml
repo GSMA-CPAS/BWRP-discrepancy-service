@@ -277,10 +277,18 @@ components:
             $ref: '#/components/schemas/UsageDiscrepancyData'
     
     Settlement:
+      required:
+        - header
+        - body
       properties:
         header:
           type: object
           description: Settlement header
+          required:
+            - version
+            - type
+            - mspOwner
+            - context
           properties:
             version:
               type: string
@@ -297,6 +305,9 @@ components:
         body:
           type: object
           description: Settlement body
+          required:
+            - inbound
+            - outbound
           properties:
             fromdate:
               type: string
@@ -311,11 +322,18 @@ components:
     
     SettlementServices:
         type: object
+        required:
+          - currency
+          - services
         properties:
             currency:
               type: string
             services:
               type: object
+              required:
+                - voice
+                - SMS
+                - Data
               properties:
                 voice:
                   type: object
@@ -373,28 +391,40 @@ components:
       properties:
         homePerspective:
           type: object
+          required:
+            - general_information
+            - details
           properties:
             general_information:
               type: array
               items: 
-                $ref: '#/components/schemas/SettlementDiscrepancyData'
+                $ref: '#/components/schemas/SettlementDiscrepancyRecord'
             details:
               type: array
               items: 
-                $ref: '#/components/schemas/SettlementDiscrepancyData'
+                $ref: '#/components/schemas/SettlementDiscrepancyRecord'
         partnerPerspective:
           type: object
+          required:
+            - general_information
+            - details
           properties:
             general_information:
               type: array
               items: 
-                $ref: '#/components/schemas/SettlementDiscrepancyData'
+                $ref: '#/components/schemas/SettlementDiscrepancyRecord'
             details:
               type: array
               items: 
-                $ref: '#/components/schemas/SettlementDiscrepancyData'
+                $ref: '#/components/schemas/SettlementDiscrepancyRecord'
                 
-    SettlementDiscrepancyData:
+    SettlementDiscrepancyRecord:
+      required:
+        - service
+        - unit
+        - own_calculation
+        - partner_calculation
+        - delta_calculation_percent
       properties:
         service:
           type: string

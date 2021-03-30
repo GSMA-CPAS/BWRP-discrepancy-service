@@ -18,22 +18,21 @@ curl -X 'PUT' \
         "services": {
           "voice": {
             "MOC": {
-              "local": 0,
-              "backHome": 0,
-              "international": 0,
-              "premium": 0,
-              "ROW": 0
+              "local": 34,
+              "backHome": 12,
+              "international": 20,
+              "premium": 23
             },
-            "MTC": 0
+            "MTC": 2343
           },
           "SMS": {
-            "MO": 0,
-            "MT": 0
+            "MO": 5707,
+            "MT": 5654
           },
           "Data": [
             {
-              "name": "string",
-              "value": 0
+              "name": "M2M",
+              "value": 526263
             }
           ]
         }
@@ -43,22 +42,22 @@ curl -X 'PUT' \
         "services": {
           "voice": {
             "MOC": {
-              "local": 0,
-              "backHome": 0,
-              "international": 0,
-              "premium": 0,
+              "local": 123.98,
+              "backHome": 231.7,
+              "international": 232,
+              "premium": 342,
               "ROW": 0
             },
             "MTC": 0
           },
           "SMS": {
-            "MO": 0,
-            "MT": 0
+            "MO": 223,
+            "MT":12334
           },
           "Data": [
             {
-              "name": "string",
-              "value": 0
+              "name": "M2M",
+              "value": 735265.8
             }
           ]
         }
@@ -80,22 +79,22 @@ curl -X 'PUT' \
         "services": {
           "voice": {
             "MOC": {
-              "local": 0,
-              "backHome": 0,
-              "international": 0,
-              "premium": 0,
+              "local": 123,
+              "backHome": 342,
+              "international": 2342,
+              "premium": 332,
               "ROW": 0
             },
             "MTC": 0
           },
           "SMS": {
-            "MO": 0,
-            "MT": 0
+            "MO": 234,
+            "MT": 123
           },
           "Data": [
             {
-              "name": "string",
-              "value": 0
+              "name": "M2M",
+              "value": 432321
             }
           ]
         }
@@ -105,22 +104,22 @@ curl -X 'PUT' \
         "services": {
           "voice": {
             "MOC": {
-              "local": 0,
-              "backHome": 0,
-              "international": 0,
-              "premium": 0,
+              "local": 2332,
+              "backHome": 3432,
+              "international": 34322,
+              "premium": 223,
               "ROW": 0
             },
-            "MTC": 0
+            "MTC": 233
           },
           "SMS": {
-            "MO": 0,
-            "MT": 0
+            "MO": 2345,
+            "MT": 2313
           },
           "Data": [
             {
-              "name": "string",
-              "value": 0
+              "name": "M2M",
+              "value": 123234
             }
           ]
         }
