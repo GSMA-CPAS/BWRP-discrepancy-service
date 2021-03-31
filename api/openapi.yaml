@@ -187,7 +187,7 @@ components:
         usage:
           type: number
           format: float
-        unit:
+        units:
           type: string
     Error:
       required:
@@ -422,6 +422,7 @@ components:
         - unit
         - own_usage
         - partner_usage
+        - delta_usage_abs
         - own_calculation
         - partner_calculation
         - delta_calculation_percent
@@ -434,6 +435,9 @@ components:
           type: number
           format: double
         partner_usage:
+          type: number
+          format: double
+        delta_usage_abs:
           type: number
           format: double
         own_calculation:

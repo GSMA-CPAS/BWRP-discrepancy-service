@@ -71,6 +71,7 @@ type Settlement struct {
 // SettlementDiscrepancyRecord defines model for SettlementDiscrepancyRecord.
 type SettlementDiscrepancyRecord struct {
 	DeltaCalculationPercent float32 `json:"delta_calculation_percent"`
+	DeltaUsageAbs           float64 `json:"delta_usage_abs"`
 	OwnCalculation          float32 `json:"own_calculation"`
 	OwnUsage                float64 `json:"own_usage"`
 	PartnerCalculation      float32 `json:"partner_calculation"`
@@ -137,7 +138,7 @@ type Usage struct {
 type UsageData struct {
 	HomeTadig    *string  `json:"homeTadig,omitempty"`
 	Service      *string  `json:"service,omitempty"`
-	Unit         *string  `json:"unit,omitempty"`
+	Units        *string  `json:"units,omitempty"`
 	Usage        *float32 `json:"usage,omitempty"`
 	VisitorTadig *string  `json:"visitorTadig,omitempty"`
 	YearMonth    *string  `json:"yearMonth,omitempty"`

@@ -78,7 +78,7 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 		if !ok {
 			generalInfoData := GeneralInfoData{}
 			generalInfoData.Service = *usageDataRecord.Service
-			generalInfoData.Unit = *usageDataRecord.Unit
+			generalInfoData.Unit = *usageDataRecord.Units
 			generalInfoData.InboundOwnUsage = *usageDataRecord.Usage
 			aggregatedSubServicesMap[*usageDataRecord.Service] = &generalInfoData
 
@@ -94,7 +94,7 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 		if !ok {
 			generalInfoData := GeneralInfoData{}
 			generalInfoData.Service = *usageDataRecord.Service
-			generalInfoData.Unit = *usageDataRecord.Unit
+			generalInfoData.Unit = *usageDataRecord.Units
 			generalInfoData.InboundPartnerUsage = *usageDataRecord.Usage
 			aggregatedSubServicesMap[*usageDataRecord.Service] = &generalInfoData
 
@@ -111,7 +111,7 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 		if !ok {
 			generalInfoData := GeneralInfoData{}
 			generalInfoData.Service = *usageDataRecord.Service
-			generalInfoData.Unit = *usageDataRecord.Unit
+			generalInfoData.Unit = *usageDataRecord.Units
 			generalInfoData.OutboundOwnUsage = *usageDataRecord.Usage
 			aggregatedSubServicesMap[*usageDataRecord.Service] = &generalInfoData
 
@@ -127,7 +127,7 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 		if !ok {
 			generalInfoData := GeneralInfoData{}
 			generalInfoData.Service = *usageDataRecord.Service
-			generalInfoData.Unit = *usageDataRecord.Unit
+			generalInfoData.Unit = *usageDataRecord.Units
 			generalInfoData.OutboundPartnerUsage = *usageDataRecord.Usage
 			aggregatedSubServicesMap[*usageDataRecord.Service] = &generalInfoData
 
@@ -368,7 +368,7 @@ func makeUsageIdentifier(usageData UsageData) string {
 func (p *DiscrepancyServer) FindUsages(ctx echo.Context) error {
 	fmt.Println("Start: FindUsages")
 
-	createServicesWithUsagesMap("home", "inbound")
+	// createServicesWithUsagesMap("home", "inbound")
 	////
 
 	var usage Usage
@@ -587,6 +587,7 @@ func createSubServicesDetails(ownMap, partnerMap map[string]float32, units strin
 		discrepancyRecord.Unit = units
 		discrepancyRecord.OwnUsage = ownUsageMap[key]
 		discrepancyRecord.PartnerUsage = partnerUsageMap[key]
+		discrepancyRecord.DeltaUsageAbs = math.Abs(discrepancyRecord.OwnUsage - discrepancyRecord.PartnerUsage)
 		discrepancyRecord.OwnCalculation = ownCalculation
 		discrepancyRecord.PartnerCalculation = partnerCalculation
 		discrepancyRecord.DeltaCalculationPercent = calculateRelativeDelta(ownCalculation, partnerCalculation)
