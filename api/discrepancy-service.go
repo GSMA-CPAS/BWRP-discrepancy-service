@@ -1,18 +1,30 @@
 package api
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/labstack/echo/v4"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+type ServiceUsage struct {
+	ID    string  `bson:"_id,omitempty"`
+	Total float64 `bson:"total,omitempty"`
+}
 
 type DiscrepancyServer struct {
 	Pets   map[int64]Usage
@@ -22,12 +34,12 @@ type DiscrepancyServer struct {
 
 func NewDiscrepancyServer() *DiscrepancyServer {
 	return &DiscrepancyServer{
-		Pets:   make(map[int64]Usage),
+		// UsageReports:   make(map[int64]Usage),
 		NextId: 1000,
 	}
 }
 
-func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId int32, params CalculateUsageDiscrepancyParams) error {
+func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId string, params CalculateUsageDiscrepancyParams) error {
 	fmt.Println("Start: CalculateUsageDiscrepancy")
 
 	// retrieve two usage reports from the request body
@@ -48,6 +60,8 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 
 	ownUsage := req[0] // assumption: first usage is a home one
 	partnerUsage := req[1]
+
+	// saveUsageReportsToLocalDB(ownUsage, partnerUsage) // later on we can get usage aggregations for settlement discrepancy purpose
 
 	fmt.Println(ownUsage.Header.Context)
 	fmt.Println(partnerUsage.Header.Context)
@@ -234,6 +248,49 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 	return ctx.JSON(http.StatusOK, report)
 }
 
+func saveUsageReportsToLocalDB(home, partner Usage) {
+
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dbCtx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+
+	err = client.Connect(dbCtx)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = client.Ping(context.TODO(), nil)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Connected to MongoDB!")
+
+	collection := client.Database("nomad").Collection("usages")
+
+	// insert home usage
+	insertResult, err := collection.InsertOne(context.TODO(), home)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Inserted a Single Document: ", insertResult.InsertedID)
+
+	// insert partner usage
+	insertResult, err = collection.InsertOne(context.TODO(), partner)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Inserted a Single Document: ", insertResult.InsertedID)
+
+	defer client.Disconnect(dbCtx)
+
+}
+
 func calculateInOutDiscrepancies(value *GeneralInfoData) GeneralInfoData {
 	delta64 := float64(value.InboundOwnUsage) - float64(value.InboundPartnerUsage)
 	absDelta64 := math.Abs(delta64)
@@ -311,6 +368,9 @@ func makeUsageIdentifier(usageData UsageData) string {
 func (p *DiscrepancyServer) FindUsages(ctx echo.Context) error {
 	fmt.Println("Start: FindUsages")
 
+	createServicesWithUsagesMap("home", "inbound")
+	////
+
 	var usage Usage
 	dtag := "DTAG"
 	version := "1.0"
@@ -318,6 +378,80 @@ func (p *DiscrepancyServer) FindUsages(ctx echo.Context) error {
 	usage.Header.Version = version
 
 	return ctx.JSON(http.StatusOK, usage)
+}
+
+func createServicesWithUsagesMap(perspective, direction string) map[string]float64 {
+	fmt.Println("createServicesWithUsagesMap")
+	fmt.Println(perspective)
+	fmt.Println(direction)
+
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	dbCtx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+
+	err = client.Connect(dbCtx)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = client.Ping(context.TODO(), nil)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Connected to MongoDB!")
+
+	// db.usages.aggregate( [ { $unwind: "$header" }, { $match: { "header.context": "home" } }, { $unwind: "$body.inbound" },
+	// { $group: { _id: "$body.inbound.service", total: { $sum: "$body.inbound.usage" } } } ] )
+
+	usagesCollection := client.Database("nomad").Collection("usages")
+	unwindStage1 := bson.D{{"$unwind", "$header"}}
+	matchStage := bson.D{{"$match", bson.D{{"header.context", perspective}}}}
+
+	bodyDirection := "$body." + direction
+	fmt.Println(bodyDirection)
+	bodyDirectionWithUsages := "$body." + direction + ".usage"
+	bodyDirectionWithService := "$body." + direction + ".service"
+
+	// unwindStage2 := bson.D{{"$unwind", "$body.inbound"}}
+	unwindStage2 := bson.D{{"$unwind", bodyDirection}}
+
+	// groupStage := bson.D{{"$group", bson.D{{"_id", "$body.inbound.service"}, {"total", bson.D{{"$sum", bodyDirectionWithUsages}}}}}}
+	groupStage := bson.D{{"$group", bson.D{{"_id", bodyDirectionWithService}, {"total", bson.D{{"$sum", bodyDirectionWithUsages}}}}}}
+
+	serviceUsageCursor, err := usagesCollection.Aggregate(dbCtx, mongo.Pipeline{unwindStage1, matchStage, unwindStage2, groupStage})
+
+	if err != nil {
+		panic(err)
+	}
+
+	// var serviceUsages []bson.M
+	var serviceUsages []ServiceUsage
+	if serviceUsageCursor.TryNext(dbCtx) {
+		if err = serviceUsageCursor.All(dbCtx, &serviceUsages); err != nil {
+			panic(err)
+		}
+	}
+
+	fmt.Println(serviceUsages)
+
+	servicesMap := make(map[string]float64, len(serviceUsages))
+
+	for _, element := range serviceUsages {
+		fmt.Println(element.ID)
+		fmt.Println(element.Total)
+		servicesMap[element.ID] = element.Total
+	}
+
+	fmt.Println(servicesMap)
+
+	defer client.Disconnect(dbCtx)
+
+	return servicesMap
 }
 
 func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, settlementId int32, params CalculateSettlementDiscrepancyParams) error {
@@ -363,18 +497,29 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	partnerInboundSmsServicesMap := createSMSServicesMap(partnerSettlement.Body.Inbound)
 	partnerInboundDataServicesMap := createDataServicesMap(partnerSettlement.Body.Inbound)
 
+	// sub-services with usages maps
+	// HOME PERSPECTIVE
+	homeInboundServiceUsageMap := createServicesWithUsagesMap("home", "inbound")
+	partnerOutboundServiceUsageMap := createServicesWithUsagesMap("partner", "outbound")
+	// PARTNER PERSPECTIVE
+	partnerInboundServiceUsageMap := createServicesWithUsagesMap("partner", "inbound")
+	homeOutboundServiceUsageMap := createServicesWithUsagesMap("home", "outbound")
+
 	// HOME PERSPECTIVE
 	// Home Perspective details: home inbound & partner outbound
 	homePerspectiveDetails := make([]SettlementDiscrepancyRecord, 0)
 
 	// voice sub-services details
-	createSubServicesDetails(homeInboundVoiceServicesMap, partnerOutboundVoiceServicesMap, "min", &homePerspectiveDetails)
+	createSubServicesDetails(homeInboundVoiceServicesMap, partnerOutboundVoiceServicesMap, "min", &homePerspectiveDetails,
+		homeInboundServiceUsageMap, partnerOutboundServiceUsageMap)
 
 	// SMS sub-services details
-	createSubServicesDetails(homeInboundSmsServicesMap, partnerOutboundSmsServicesMap, "SMS", &homePerspectiveDetails)
+	createSubServicesDetails(homeInboundSmsServicesMap, partnerOutboundSmsServicesMap, "SMS", &homePerspectiveDetails,
+		homeInboundServiceUsageMap, partnerOutboundServiceUsageMap)
 
 	// data sub-services details
-	createSubServicesDetails(homeInboundDataServicesMap, partnerOutboundDataServicesMap, "MB", &homePerspectiveDetails)
+	createSubServicesDetails(homeInboundDataServicesMap, partnerOutboundDataServicesMap, "MB", &homePerspectiveDetails,
+		homeInboundServiceUsageMap, partnerOutboundServiceUsageMap)
 
 	// Home Perspective general information: home inbound & partner outbound
 	homePerspectiveGeneralInfo := make([]SettlementDiscrepancyRecord, 0)
@@ -393,13 +538,16 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	partnerPerspectiveDetails := make([]SettlementDiscrepancyRecord, 0)
 
 	// voice sub-services details
-	createSubServicesDetails(partnerInboundVoiceServicesMap, homeOutboundVoiceServicesMap, "min", &partnerPerspectiveDetails)
+	createSubServicesDetails(partnerInboundVoiceServicesMap, homeOutboundVoiceServicesMap, "min", &partnerPerspectiveDetails,
+		partnerInboundServiceUsageMap, homeOutboundServiceUsageMap)
 
 	// SMS sub-services details
-	createSubServicesDetails(partnerInboundSmsServicesMap, homeOutboundSmsServicesMap, "SMS", &partnerPerspectiveDetails)
+	createSubServicesDetails(partnerInboundSmsServicesMap, homeOutboundSmsServicesMap, "SMS", &partnerPerspectiveDetails,
+		partnerInboundServiceUsageMap, homeOutboundServiceUsageMap)
 
 	// data sub-services details
-	createSubServicesDetails(partnerInboundDataServicesMap, homeOutboundDataServicesMap, "MB", &partnerPerspectiveDetails)
+	createSubServicesDetails(partnerInboundDataServicesMap, homeOutboundDataServicesMap, "MB", &partnerPerspectiveDetails,
+		partnerInboundServiceUsageMap, homeOutboundServiceUsageMap)
 
 	// Partner Perspective general information: partner inbound & home outbound
 	partnerPerspectiveGeneralInfo := make([]SettlementDiscrepancyRecord, 0)
@@ -429,12 +577,16 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	return ctx.JSON(http.StatusOK, report)
 }
 
-func createSubServicesDetails(ownMap, partnerMap map[string]float32, units string, details *[]SettlementDiscrepancyRecord) {
+func createSubServicesDetails(ownMap, partnerMap map[string]float32, units string, details *[]SettlementDiscrepancyRecord,
+	ownUsageMap, partnerUsageMap map[string]float64) {
+
 	for key, ownCalculation := range ownMap {
 		partnerCalculation := partnerMap[key]
 		var discrepancyRecord = SettlementDiscrepancyRecord{}
 		discrepancyRecord.Service = key
 		discrepancyRecord.Unit = units
+		discrepancyRecord.OwnUsage = ownUsageMap[key]
+		discrepancyRecord.PartnerUsage = partnerUsageMap[key]
 		discrepancyRecord.OwnCalculation = ownCalculation
 		discrepancyRecord.PartnerCalculation = partnerCalculation
 		discrepancyRecord.DeltaCalculationPercent = calculateRelativeDelta(ownCalculation, partnerCalculation)

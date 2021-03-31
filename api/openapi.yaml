@@ -25,15 +25,13 @@ paths:
           description: home usage report ID
           required: true
           schema:
-            type: integer
-            format: int32
+            type: string
         - name: partnerUsageId
           in: query
           description: partner usage report ID
           required: true
           schema:
-            type: integer
-            format: int32
+            type: string
       requestBody:
         description: Home & partner usage reports
         required: true
@@ -422,6 +420,8 @@ components:
       required:
         - service
         - unit
+        - own_usage
+        - partner_usage
         - own_calculation
         - partner_calculation
         - delta_calculation_percent
@@ -430,6 +430,12 @@ components:
           type: string
         unit:
           type: string
+        own_usage:
+          type: number
+          format: double
+        partner_usage:
+          type: number
+          format: double
         own_calculation:
           type: number
           format: float
