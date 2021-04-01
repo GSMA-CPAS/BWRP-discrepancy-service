@@ -92,15 +92,13 @@ paths:
           description: home settlement ID
           required: true
           schema:
-            type: integer
-            format: int32
+            type: string
         - name: partnerSettlementId
           in: query
           description: partner settlement ID
           required: true
           schema:
-            type: integer
-            format: int32
+            type: string
       requestBody:
         description: Home & partner settlements
         required: true
@@ -423,6 +421,7 @@ components:
         - own_usage
         - partner_usage
         - delta_usage_abs
+        - delta_usage_percent
         - own_calculation
         - partner_calculation
         - delta_calculation_percent
@@ -438,6 +437,9 @@ components:
           type: number
           format: double
         delta_usage_abs:
+          type: number
+          format: double
+        delta_usage_percent:
           type: number
           format: double
         own_calculation:

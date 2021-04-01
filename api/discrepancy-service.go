@@ -61,7 +61,7 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 	ownUsage := req[0] // assumption: first usage is a home one
 	partnerUsage := req[1]
 
-	// saveUsageReportsToLocalDB(ownUsage, partnerUsage) // later on we can get usage aggregations for settlement discrepancy purpose
+	saveUsageReportsToLocalDB(ownUsage, partnerUsage) // later on we can get usage aggregations for settlement discrepancy purpose
 
 	fmt.Println(ownUsage.Header.Context)
 	fmt.Println(partnerUsage.Header.Context)
@@ -380,7 +380,7 @@ func (p *DiscrepancyServer) FindUsages(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, usage)
 }
 
-func createServicesWithUsagesMap(perspective, direction string) map[string]float64 {
+func createSubServicesWithUsagesMap(perspective, direction string) map[string]float64 {
 	fmt.Println("createServicesWithUsagesMap")
 	fmt.Println(perspective)
 	fmt.Println(direction)
@@ -454,7 +454,81 @@ func createServicesWithUsagesMap(perspective, direction string) map[string]float
 	return servicesMap
 }
 
-func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, settlementId int32, params CalculateSettlementDiscrepancyParams) error {
+func createBearerServicesWithUsagesMap(perspective, direction string) map[string]float64 {
+	fmt.Println("createServicesWithUsagesMap")
+	fmt.Println(perspective)
+	fmt.Println(direction)
+
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	dbCtx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+
+	err = client.Connect(dbCtx)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = client.Ping(context.TODO(), nil)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Connected to MongoDB!")
+
+	// db.usages.aggregate( [ { $unwind: "$header" }, { $match: { "header.context": "home" } }, { $unwind: "$body.inbound" },
+	// { $group: { _id: "$body.inbound.service", total: { $sum: "$body.inbound.usage" } } } ] )
+
+	usagesCollection := client.Database("nomad").Collection("usages")
+	unwindStage1 := bson.D{{"$unwind", "$header"}}
+	matchStage := bson.D{{"$match", bson.D{{"header.context", perspective}}}}
+
+	bodyDirection := "$body." + direction
+	fmt.Println(bodyDirection)
+	bodyDirectionWithUsages := "$body." + direction + ".usage"
+	bodyDirectionWithService := "$body." + direction + ".units"
+
+	// unwindStage2 := bson.D{{"$unwind", "$body.inbound"}}
+	unwindStage2 := bson.D{{"$unwind", bodyDirection}}
+
+	// groupStage := bson.D{{"$group", bson.D{{"_id", "$body.inbound.service"}, {"total", bson.D{{"$sum", bodyDirectionWithUsages}}}}}}
+	groupStage := bson.D{{"$group", bson.D{{"_id", bodyDirectionWithService}, {"total", bson.D{{"$sum", bodyDirectionWithUsages}}}}}}
+
+	serviceUsageCursor, err := usagesCollection.Aggregate(dbCtx, mongo.Pipeline{unwindStage1, matchStage, unwindStage2, groupStage})
+
+	if err != nil {
+		panic(err)
+	}
+
+	// var serviceUsages []bson.M
+	var serviceUsages []ServiceUsage
+	if serviceUsageCursor.TryNext(dbCtx) {
+		if err = serviceUsageCursor.All(dbCtx, &serviceUsages); err != nil {
+			panic(err)
+		}
+	}
+
+	fmt.Println(serviceUsages)
+
+	servicesMap := make(map[string]float64, len(serviceUsages))
+
+	for _, element := range serviceUsages {
+		fmt.Println(element.ID)
+		fmt.Println(element.Total)
+		servicesMap[element.ID] = element.Total
+	}
+
+	fmt.Println(servicesMap)
+
+	defer client.Disconnect(dbCtx)
+
+	return servicesMap
+}
+
+func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, settlementId string, params CalculateSettlementDiscrepancyParams) error {
 	fmt.Println("Start: CalculateSettlementDiscrepancy")
 
 	// retrieve two settlements from the request body
@@ -497,13 +571,20 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	partnerInboundSmsServicesMap := createSMSServicesMap(partnerSettlement.Body.Inbound)
 	partnerInboundDataServicesMap := createDataServicesMap(partnerSettlement.Body.Inbound)
 
-	// sub-services with usages maps
 	// HOME PERSPECTIVE
-	homeInboundServiceUsageMap := createServicesWithUsagesMap("home", "inbound")
-	partnerOutboundServiceUsageMap := createServicesWithUsagesMap("partner", "outbound")
+	// sub-services with usages maps
+	homeInboundServiceUsageMap := createSubServicesWithUsagesMap("home", "inbound")
+	partnerOutboundServiceUsageMap := createSubServicesWithUsagesMap("partner", "outbound")
+	// bearer services with usages maps
+	homeInboundBearerServiceUsageMap := createBearerServicesWithUsagesMap("home", "inbound")
+	partnerOutboundBearerServiceUsageMap := createBearerServicesWithUsagesMap("partner", "outbound")
+
 	// PARTNER PERSPECTIVE
-	partnerInboundServiceUsageMap := createServicesWithUsagesMap("partner", "inbound")
-	homeOutboundServiceUsageMap := createServicesWithUsagesMap("home", "outbound")
+	partnerInboundServiceUsageMap := createSubServicesWithUsagesMap("partner", "inbound")
+	homeOutboundServiceUsageMap := createSubServicesWithUsagesMap("home", "outbound")
+	// bearer services with usages maps
+	partnerInboundBearerServiceUsageMap := createBearerServicesWithUsagesMap("partner", "inbound")
+	homeOutboundBearerServiceUsageMap := createBearerServicesWithUsagesMap("home", "outbound")
 
 	// HOME PERSPECTIVE
 	// Home Perspective details: home inbound & partner outbound
@@ -525,13 +606,16 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	homePerspectiveGeneralInfo := make([]SettlementDiscrepancyRecord, 0)
 
 	// voice general information
-	createGeneralInformation(homeInboundVoiceServicesMap, partnerOutboundVoiceServicesMap, "Voice", "min", &homePerspectiveGeneralInfo)
+	createGeneralInformation(homeInboundVoiceServicesMap, partnerOutboundVoiceServicesMap, "Voice", "min", &homePerspectiveGeneralInfo,
+		homeInboundBearerServiceUsageMap, partnerOutboundBearerServiceUsageMap)
 
 	// SMS general information
-	createGeneralInformation(homeInboundSmsServicesMap, partnerOutboundSmsServicesMap, "SMS", "SMS", &homePerspectiveGeneralInfo)
+	createGeneralInformation(homeInboundSmsServicesMap, partnerOutboundSmsServicesMap, "SMS", "SMS", &homePerspectiveGeneralInfo,
+		homeInboundBearerServiceUsageMap, partnerOutboundBearerServiceUsageMap)
 
 	// data general information
-	createGeneralInformation(homeInboundDataServicesMap, partnerOutboundDataServicesMap, "Data", "MB", &homePerspectiveGeneralInfo)
+	createGeneralInformation(homeInboundDataServicesMap, partnerOutboundDataServicesMap, "Data", "MB", &homePerspectiveGeneralInfo,
+		homeInboundBearerServiceUsageMap, partnerOutboundBearerServiceUsageMap)
 
 	// PARTNER PERSPECTIVE
 	// Partner Perspective details: partner inbound & home outbound
@@ -553,13 +637,16 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	partnerPerspectiveGeneralInfo := make([]SettlementDiscrepancyRecord, 0)
 
 	// voice general information
-	createGeneralInformation(partnerInboundVoiceServicesMap, homeOutboundVoiceServicesMap, "Voice", "min", &partnerPerspectiveGeneralInfo)
+	createGeneralInformation(partnerInboundVoiceServicesMap, homeOutboundVoiceServicesMap, "Voice", "min", &partnerPerspectiveGeneralInfo,
+		partnerInboundBearerServiceUsageMap, homeOutboundBearerServiceUsageMap)
 
 	// SMS general information
-	createGeneralInformation(partnerInboundSmsServicesMap, homeOutboundSmsServicesMap, "SMS", "SMS", &partnerPerspectiveGeneralInfo)
+	createGeneralInformation(partnerInboundSmsServicesMap, homeOutboundSmsServicesMap, "SMS", "SMS", &partnerPerspectiveGeneralInfo,
+		partnerInboundBearerServiceUsageMap, homeOutboundBearerServiceUsageMap)
 
 	// data general information
-	createGeneralInformation(partnerInboundDataServicesMap, homeOutboundDataServicesMap, "Data", "MB", &partnerPerspectiveGeneralInfo)
+	createGeneralInformation(partnerInboundDataServicesMap, homeOutboundDataServicesMap, "Data", "MB", &partnerPerspectiveGeneralInfo,
+		partnerInboundBearerServiceUsageMap, homeOutboundBearerServiceUsageMap)
 
 	// create final report
 	report := SettlementDiscrepancyReport{}
@@ -595,7 +682,9 @@ func createSubServicesDetails(ownMap, partnerMap map[string]float32, units strin
 	}
 }
 
-func createGeneralInformation(ownMap, partnerMap map[string]float32, service, units string, generalInfoArr *[]SettlementDiscrepancyRecord) {
+func createGeneralInformation(ownMap, partnerMap map[string]float32, service, units string, generalInfoArr *[]SettlementDiscrepancyRecord,
+	ownUsageMap, partnerUsageMap map[string]float64) {
+
 	ownCalculationTotalAmount := float32(0)
 	for _, value := range ownMap {
 		ownCalculationTotalAmount += value
@@ -607,6 +696,11 @@ func createGeneralInformation(ownMap, partnerMap map[string]float32, service, un
 	discrepancyRecord := SettlementDiscrepancyRecord{}
 	discrepancyRecord.Service = service
 	discrepancyRecord.Unit = units
+	// Usages
+	discrepancyRecord.OwnUsage = ownUsageMap[units]
+	discrepancyRecord.PartnerUsage = partnerUsageMap[units]
+	discrepancyRecord.DeltaUsageAbs = math.Abs(discrepancyRecord.OwnUsage - discrepancyRecord.PartnerUsage)
+	// Calculations
 	discrepancyRecord.OwnCalculation = ownCalculationTotalAmount
 	discrepancyRecord.PartnerCalculation = partnerCalculationTotalAmount
 	discrepancyRecord.DeltaCalculationPercent = calculateRelativeDelta(ownCalculationTotalAmount, partnerCalculationTotalAmount)

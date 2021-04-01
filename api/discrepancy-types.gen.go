@@ -72,6 +72,7 @@ type Settlement struct {
 type SettlementDiscrepancyRecord struct {
 	DeltaCalculationPercent float32 `json:"delta_calculation_percent"`
 	DeltaUsageAbs           float64 `json:"delta_usage_abs"`
+	DeltaUsagePercent       float64 `json:"delta_usage_percent"`
 	OwnCalculation          float32 `json:"own_calculation"`
 	OwnUsage                float64 `json:"own_usage"`
 	PartnerCalculation      float32 `json:"partner_calculation"`
@@ -170,7 +171,7 @@ type CalculateSettlementDiscrepancyJSONBody []Settlement
 type CalculateSettlementDiscrepancyParams struct {
 
 	// partner settlement ID
-	PartnerSettlementId int32 `json:"partnerSettlementId"`
+	PartnerSettlementId string `json:"partnerSettlementId"`
 }
 
 // CalculateUsageDiscrepancyJSONBody defines parameters for CalculateUsageDiscrepancy.

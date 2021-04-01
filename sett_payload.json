@@ -1,0 +1,133 @@
+[
+  {
+    "header": {
+      "version": "string",
+      "type": "string",
+      "mspOwner": "DTAG",
+      "context": "home"
+    },
+    "body": {
+      "fromdate": "string",
+      "todate": "string",
+      "inbound": {
+        "currency": "string",
+        "services": {
+          "voice": {
+            "MOC": {
+              "local": 13613.767000000002,
+              "backHome": 41396.948,
+              "international": 20,
+              "premium": 23
+            },
+            "MTC": 2343
+          },
+          "SMS": {
+            "MO": 5707,
+            "MT": 5654
+          },
+          "Data": [
+            {
+              "name": "M2M",
+              "value": 526263
+            },
+            {
+              "name": "GPRS",
+              "value": 299827.44950000005
+            }
+          ]
+        }
+      },
+      "outbound": {
+        "currency": "string",
+        "services": {
+          "voice": {
+            "MOC": {
+              "local": 13608.236,
+              "backHome": 41350.601599999995,
+              "international": 232,
+              "premium": 342,
+              "ROW": 0
+            },
+            "MTC": 0
+          },
+          "SMS": {
+            "MO": 223,
+            "MT":12334
+          },
+          "Data": [
+            {
+              "name": "M2M",
+              "value": 735265.8
+            },
+            {
+              "name": "GPRS",
+              "value": 158534.70630000002
+            }            
+          ]
+        }
+      }
+    }
+  },
+  {
+    "header": {
+      "version": "string",
+      "type": "string",
+      "mspOwner": "ORANGE",
+      "context": "partner"
+    },
+    "body": {
+      "fromdate": "string",
+      "todate": "string",
+      "inbound": {
+        "currency": "EURO",
+        "services": {
+          "voice": {
+            "MOC": {
+              "local": 13613.767000000002,
+              "backHome": 41396.948,
+              "international": 2342,
+              "premium": 332,
+              "ROW": 0
+            },
+            "MTC": 0
+          },
+          "SMS": {
+            "MO": 234,
+            "MT": 123
+          },
+          "Data": [
+            {
+              "name": "M2M",
+              "value": 432321
+            }
+          ]
+        }
+      },
+      "outbound": {
+        "currency": "string",
+        "services": {
+          "voice": {
+            "MOC": {
+              "local": 2332,
+              "backHome": 3432,
+              "international": 34322,
+              "premium": 223,
+              "ROW": 0
+            },
+            "MTC": 233
+          },
+          "SMS": {
+            "MO": 2345,
+            "MT": 2313
+          },
+          "Data": [
+            {
+              "name": "M2M",
+              "value": 123234
+            }
+          ]
+        }
+      }
+    }
+  }
+]
