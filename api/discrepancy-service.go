@@ -15,11 +15,16 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/tkanos/gonfig"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+type Configuration struct {
+	Connection_String string
+}
 
 type ServiceUsage struct {
 	ID    string  `bson:"_id,omitempty"`
@@ -27,15 +32,27 @@ type ServiceUsage struct {
 }
 
 type DiscrepancyServer struct {
-	Pets   map[int64]Usage
 	NextId int64
 	Lock   sync.Mutex
+	config Configuration
 }
 
 func NewDiscrepancyServer() *DiscrepancyServer {
+	fmt.Println("Starting service...")
+
+	configuration := Configuration{}
+	err := gonfig.GetConf("config/config.json", &configuration)
+	if err != nil {
+		fmt.Println(fmt.Errorf("Error reading DB connection string: %w", err))
+		configuration.Connection_String = "mongodb://localhost:27017"
+	}
+
+	fmt.Printf("Connection string: %s\n", configuration.Connection_String)
+
 	return &DiscrepancyServer{
 		// UsageReports:   make(map[int64]Usage),
 		NextId: 1000,
+		config: configuration,
 	}
 }
 
@@ -61,7 +78,8 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 	ownUsage := req[0] // assumption: first usage is a home one
 	partnerUsage := req[1]
 
-	saveUsageReportsToLocalDB(ownUsage, partnerUsage) // later on we can get usage aggregations for settlement discrepancy purpose
+	// later on we can get usage aggregations for the settlement discrepancy purpose
+	p.saveUsageReportsToLocalDB(ownUsage, partnerUsage)
 
 	fmt.Println(ownUsage.Header.Context)
 	fmt.Println(partnerUsage.Header.Context)
@@ -248,11 +266,13 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 	return ctx.JSON(http.StatusOK, report)
 }
 
-func saveUsageReportsToLocalDB(home, partner Usage) {
+func (p *DiscrepancyServer) saveUsageReportsToLocalDB(home, partner Usage) {
 
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	// client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Connection_String))
 	if err != nil {
 		log.Fatal(err)
+		return
 	}
 
 	dbCtx, _ := context.WithTimeout(context.Background(), 10*time.Second)
@@ -368,8 +388,13 @@ func makeUsageIdentifier(usageData UsageData) string {
 func (p *DiscrepancyServer) FindUsages(ctx echo.Context) error {
 	fmt.Println("Start: FindUsages")
 
-	// createServicesWithUsagesMap("home", "inbound")
-	////
+	configuration := Configuration{}
+	err := gonfig.GetConf("config/config.json", &configuration)
+	if err != nil {
+
+	}
+
+	fmt.Printf("Connection string: %s\n", configuration.Connection_String)
 
 	var usage Usage
 	dtag := "DTAG"
@@ -380,12 +405,13 @@ func (p *DiscrepancyServer) FindUsages(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, usage)
 }
 
-func createSubServicesWithUsagesMap(perspective, direction string) map[string]float64 {
+func (p *DiscrepancyServer) createSubServicesWithUsagesMap(perspective, direction string) map[string]float64 {
 	fmt.Println("createServicesWithUsagesMap")
 	fmt.Println(perspective)
 	fmt.Println(direction)
 
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	// client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Connection_String))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -573,15 +599,15 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 
 	// HOME PERSPECTIVE
 	// sub-services with usages maps
-	homeInboundServiceUsageMap := createSubServicesWithUsagesMap("home", "inbound")
-	partnerOutboundServiceUsageMap := createSubServicesWithUsagesMap("partner", "outbound")
+	homeInboundServiceUsageMap := p.createSubServicesWithUsagesMap("home", "inbound")
+	partnerOutboundServiceUsageMap := p.createSubServicesWithUsagesMap("partner", "outbound")
 	// bearer services with usages maps
 	homeInboundBearerServiceUsageMap := createBearerServicesWithUsagesMap("home", "inbound")
 	partnerOutboundBearerServiceUsageMap := createBearerServicesWithUsagesMap("partner", "outbound")
 
 	// PARTNER PERSPECTIVE
-	partnerInboundServiceUsageMap := createSubServicesWithUsagesMap("partner", "inbound")
-	homeOutboundServiceUsageMap := createSubServicesWithUsagesMap("home", "outbound")
+	partnerInboundServiceUsageMap := p.createSubServicesWithUsagesMap("partner", "inbound")
+	homeOutboundServiceUsageMap := p.createSubServicesWithUsagesMap("home", "outbound")
 	// bearer services with usages maps
 	partnerInboundBearerServiceUsageMap := createBearerServicesWithUsagesMap("partner", "inbound")
 	homeOutboundBearerServiceUsageMap := createBearerServicesWithUsagesMap("home", "outbound")
