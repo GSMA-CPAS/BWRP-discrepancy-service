@@ -33,9 +33,10 @@ type ServiceUsage struct {
 }
 
 type DiscrepancyServer struct {
-	NextId int64
-	Lock   sync.Mutex
-	config Configuration
+	NextId     int64
+	Lock       sync.Mutex
+	config     Configuration
+	credential options.Credential
 }
 
 func NewDiscrepancyServer() *DiscrepancyServer {
@@ -57,10 +58,16 @@ func NewDiscrepancyServer() *DiscrepancyServer {
 
 	fmt.Printf("Connection string: %s\n", configuration.Connection_String)
 
+	dbAccessCredentials := options.Credential{
+		Username: "root",
+		Password: "root",
+	}
+
 	return &DiscrepancyServer{
 		// UsageReports:   make(map[int64]Usage),
-		NextId: 1000,
-		config: configuration,
+		NextId:     1000,
+		config:     configuration,
+		credential: dbAccessCredentials,
 	}
 }
 
@@ -277,7 +284,8 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 func (p *DiscrepancyServer) saveUsageReportsToLocalDB(home, partner Usage) {
 
 	// client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
-	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Connection_String))
+
+	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Connection_String).SetAuth(p.credential))
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -426,7 +434,7 @@ func (p *DiscrepancyServer) createSubServicesWithUsagesMap(perspective, directio
 	fmt.Println(direction)
 
 	// client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
-	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Connection_String))
+	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Connection_String).SetAuth(p.credential))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -501,7 +509,7 @@ func (p *DiscrepancyServer) createBearerServicesWithUsagesMap(perspective, direc
 	fmt.Println(direction)
 
 	// client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
-	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Connection_String))
+	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Connection_String).SetAuth(p.credential))
 	if err != nil {
 		log.Fatal(err)
 	}
