@@ -301,6 +301,13 @@ func (p *DiscrepancyServer) saveUsageReportsToLocalDB(home, partner Usage) {
 
 	collection := client.Database("nomad").Collection("usages")
 
+	// only one timeline is supported
+	deleteResult, err := collection.DeleteMany(context.TODO(), bson.D{})
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Deleted %v documents in the trainers collection\n", deleteResult.DeletedCount)
+
 	// insert home usage
 	insertResult, err := collection.InsertOne(context.TODO(), home)
 	if err != nil {
