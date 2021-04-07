@@ -488,12 +488,13 @@ func (p *DiscrepancyServer) createSubServicesWithUsagesMap(perspective, directio
 	return servicesMap
 }
 
-func createBearerServicesWithUsagesMap(perspective, direction string) map[string]float64 {
+func (p *DiscrepancyServer) createBearerServicesWithUsagesMap(perspective, direction string) map[string]float64 {
 	fmt.Println("createServicesWithUsagesMap")
 	fmt.Println(perspective)
 	fmt.Println(direction)
 
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	// client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Connection_String))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -610,15 +611,15 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	homeInboundServiceUsageMap := p.createSubServicesWithUsagesMap("home", "inbound")
 	partnerOutboundServiceUsageMap := p.createSubServicesWithUsagesMap("partner", "outbound")
 	// bearer services with usages maps
-	homeInboundBearerServiceUsageMap := createBearerServicesWithUsagesMap("home", "inbound")
-	partnerOutboundBearerServiceUsageMap := createBearerServicesWithUsagesMap("partner", "outbound")
+	homeInboundBearerServiceUsageMap := p.createBearerServicesWithUsagesMap("home", "inbound")
+	partnerOutboundBearerServiceUsageMap := p.createBearerServicesWithUsagesMap("partner", "outbound")
 
 	// PARTNER PERSPECTIVE
 	partnerInboundServiceUsageMap := p.createSubServicesWithUsagesMap("partner", "inbound")
 	homeOutboundServiceUsageMap := p.createSubServicesWithUsagesMap("home", "outbound")
 	// bearer services with usages maps
-	partnerInboundBearerServiceUsageMap := createBearerServicesWithUsagesMap("partner", "inbound")
-	homeOutboundBearerServiceUsageMap := createBearerServicesWithUsagesMap("home", "outbound")
+	partnerInboundBearerServiceUsageMap := p.createBearerServicesWithUsagesMap("partner", "inbound")
+	homeOutboundBearerServiceUsageMap := p.createBearerServicesWithUsagesMap("home", "outbound")
 
 	// HOME PERSPECTIVE
 	// Home Perspective details: home inbound & partner outbound
