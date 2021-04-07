@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/kelseyhightower/envconfig"
 	"github.com/labstack/echo/v4"
 	"github.com/tkanos/gonfig"
 
@@ -23,7 +24,7 @@ import (
 )
 
 type Configuration struct {
-	Connection_String string
+	Connection_String string `envconfig:"MONGO_CONN_URL"`
 }
 
 type ServiceUsage struct {
@@ -40,10 +41,17 @@ type DiscrepancyServer struct {
 func NewDiscrepancyServer() *DiscrepancyServer {
 	fmt.Println("Starting service...")
 
-	configuration := Configuration{}
-	err := gonfig.GetConf("config/config.json", &configuration)
+	// configuration := Configuration{}
+	// err := gonfig.GetConf("config/config.json", &configuration)
+	// if err != nil {
+	// 	fmt.Println(fmt.Errorf("Error reading DB connection string: %w", err))
+	// 	configuration.Connection_String = "mongodb://localhost:27017"
+	// }
+
+	var configuration Configuration
+	err := envconfig.Process("", &configuration)
 	if err != nil {
-		fmt.Println(fmt.Errorf("Error reading DB connection string: %w", err))
+		fmt.Println(fmt.Errorf("Error reading DB connection string: %w - default url will be used instead.", err))
 		configuration.Connection_String = "mongodb://localhost:27017"
 	}
 
