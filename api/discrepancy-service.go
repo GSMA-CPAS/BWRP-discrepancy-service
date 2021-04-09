@@ -504,7 +504,7 @@ func (p *DiscrepancyServer) createSubServicesWithUsagesMap(perspective, directio
 }
 
 func (p *DiscrepancyServer) createBearerServicesWithUsagesMap(perspective, direction string) map[string]float64 {
-	fmt.Println("createServicesWithUsagesMap")
+	fmt.Println("createBearerServicesWithUsagesMap")
 	fmt.Println(perspective)
 	fmt.Println(direction)
 
@@ -603,6 +603,7 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	fmt.Println(homeSettlement.Header.Context)
 	fmt.Println(partnerSettlement.Header.Context)
 
+	// MAPS OF SERVICES
 	// home inbound
 	homeInboundVoiceServicesMap := createVoiceServicesMap(homeSettlement.Body.Inbound)
 	homeInboundSmsServicesMap := createSMSServicesMap(homeSettlement.Body.Inbound)
@@ -717,18 +718,30 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 func createSubServicesDetails(ownMap, partnerMap map[string]float32, units string, details *[]SettlementDiscrepancyRecord,
 	ownUsageMap, partnerUsageMap map[string]float64) {
 
+	fmt.Println("createSubServicesDetails")
+
 	for key, ownCalculation := range ownMap {
 		partnerCalculation := partnerMap[key]
-		var discrepancyRecord = SettlementDiscrepancyRecord{}
-		discrepancyRecord.Service = key
-		discrepancyRecord.Unit = units
-		discrepancyRecord.OwnUsage = ownUsageMap[key]
-		discrepancyRecord.PartnerUsage = partnerUsageMap[key]
-		discrepancyRecord.DeltaUsageAbs = math.Abs(discrepancyRecord.OwnUsage - discrepancyRecord.PartnerUsage)
-		discrepancyRecord.OwnCalculation = ownCalculation
-		discrepancyRecord.PartnerCalculation = partnerCalculation
-		discrepancyRecord.DeltaCalculationPercent = calculateRelativeDelta(ownCalculation, partnerCalculation)
-		*details = append(*details, discrepancyRecord)
+
+		if !(ownCalculation == 0 && partnerCalculation == 0) { // sub-service sholdn't be sent and can be skipped
+			var discrepancyRecord = SettlementDiscrepancyRecord{}
+			discrepancyRecord.Service = key
+			discrepancyRecord.Unit = units
+			////
+			fmt.Printf("createSubServicesDetails: key: %s and associoated usages: own = %f, partner = %f\n", key, ownUsageMap[key], partnerUsageMap[key])
+			////
+			discrepancyRecord.OwnUsage = ownUsageMap[key]
+			discrepancyRecord.PartnerUsage = partnerUsageMap[key]
+			discrepancyRecord.DeltaUsageAbs = math.Abs(discrepancyRecord.OwnUsage - discrepancyRecord.PartnerUsage)
+			discrepancyRecord.OwnCalculation = ownCalculation
+			discrepancyRecord.PartnerCalculation = partnerCalculation
+			discrepancyRecord.DeltaCalculationPercent = calculateRelativeDelta(ownCalculation, partnerCalculation)
+			////
+			fmt.Printf("createSubServicesDetails: DeltaUsageAbs : %f DeltaCalculationPercent %f\n", discrepancyRecord.DeltaUsageAbs,
+				discrepancyRecord.DeltaCalculationPercent)
+			////
+			*details = append(*details, discrepancyRecord)
+		}
 	}
 }
 
@@ -767,11 +780,11 @@ func calculateRelativeDelta(A, B float32) float32 {
 func createVoiceServicesMap(input SettlementServices) map[string]float32 {
 	fmt.Println("Voice services values:")
 
-	fmt.Println(input.Services.Voice.MOC.BackHome)
-	fmt.Println(input.Services.Voice.MOC.International)
-	fmt.Println(input.Services.Voice.MOC.Local)
-	fmt.Println(input.Services.Voice.MOC.Premium)
-	fmt.Println(input.Services.Voice.MOC.ROW)
+	// fmt.Println(input.Services.Voice.MOC.BackHome)
+	// fmt.Println(input.Services.Voice.MOC.International)
+	// fmt.Println(input.Services.Voice.MOC.Local)
+	// fmt.Println(input.Services.Voice.MOC.Premium)
+	// fmt.Println(input.Services.Voice.MOC.ROW)
 
 	voiceServicesMap := make(map[string]float32, 0)
 
@@ -801,7 +814,7 @@ func createVoiceServicesMap(input SettlementServices) map[string]float32 {
 		fmt.Printf("ROW: %f\n", *ROW)
 	}
 
-	// TODO: Add support for MTC
+	// TODO: Add support for MTC and other MOC services
 
 	return voiceServicesMap
 }
