@@ -97,11 +97,11 @@ type SettlementDiscrepancyReport struct {
 type SettlementServices struct {
 	Currency string `json:"currency"`
 	Services struct {
-		Data []DataService `json:"Data"`
-		SMS  struct {
+		SMS struct {
 			MO *float32 `json:"MO,omitempty"`
 			MT *float32 `json:"MT,omitempty"`
 		} `json:"SMS"`
+		Data  []DataService `json:"data"`
 		Voice struct {
 			MOC *MOC     `json:"MOC,omitempty"`
 			MTC *float32 `json:"MTC,omitempty"`

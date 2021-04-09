@@ -329,7 +329,7 @@ components:
               required:
                 - voice
                 - SMS
-                - Data
+                - data
               properties:
                 voice:
                   type: object
@@ -349,7 +349,7 @@ components:
                     MT:
                       type: number
                       format: float
-                Data:
+                data:
                   type: array
                   items: 
                     $ref: '#/components/schemas/DataService'

@@ -17,7 +17,8 @@
               "local": 13613.767000000002,
               "backHome": 41396.948,
               "international": 20,
-              "premium": 23
+              "premium": 23,
+              "videoTelephony": 0
             },
             "MTC": 2343
           },
@@ -25,7 +26,7 @@
             "MO": 5707,
             "MT": 5654
           },
-          "Data": [
+          "data": [
             {
               "name": "M2M",
               "value": 526263
@@ -46,7 +47,8 @@
               "backHome": 41350.601599999995,
               "international": 232,
               "premium": 342,
-              "ROW": 0
+              "ROW": 0,
+              "videoTelephony": 0
             },
             "MTC": 0
           },
@@ -54,7 +56,7 @@
             "MO": 223,
             "MT":12334
           },
-          "Data": [
+          "data": [
             {
               "name": "M2M",
               "value": 735265.8
@@ -87,7 +89,8 @@
               "backHome": 41396.948,
               "international": 2342,
               "premium": 332,
-              "ROW": 0
+              "ROW": 0,
+              "videoTelephony": 0
             },
             "MTC": 0
           },
@@ -95,7 +98,7 @@
             "MO": 234,
             "MT": 123
           },
-          "Data": [
+          "data": [
             {
               "name": "M2M",
               "value": 432321
@@ -112,7 +115,8 @@
               "backHome": 3432,
               "international": 34322,
               "premium": 223,
-              "ROW": 0
+              "ROW": 0,
+              "videoTelephony": 0
             },
             "MTC": 233
           },
@@ -120,7 +124,7 @@
             "MO": 2345,
             "MT": 2313
           },
-          "Data": [
+          "data": [
             {
               "name": "M2M",
               "value": 123234
