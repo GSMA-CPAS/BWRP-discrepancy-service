@@ -21,12 +21,12 @@ type Error struct {
 
 // GeneralInfoData defines model for GeneralInfoData.
 type GeneralInfoData struct {
-	InboundDiscrepancy   float32 `json:"inbound_discrepancy"`
-	InboundOwnUsage      float32 `json:"inbound_own_usage"`
-	InboundPartnerUsage  float32 `json:"inbound_partner_usage"`
-	OutboundDiscrepancy  float32 `json:"outbound_discrepancy"`
-	OutboundOwnUsage     float32 `json:"outbound_own_usage"`
-	OutboundPartnerUsage float32 `json:"outbound_partner_usage"`
+	InboundDiscrepancy   float64 `json:"inbound_discrepancy"`
+	InboundOwnUsage      float64 `json:"inbound_own_usage"`
+	InboundPartnerUsage  float64 `json:"inbound_partner_usage"`
+	OutboundDiscrepancy  float64 `json:"outbound_discrepancy"`
+	OutboundOwnUsage     float64 `json:"outbound_own_usage"`
+	OutboundPartnerUsage float64 `json:"outbound_partner_usage"`
 	Service              string  `json:"service"`
 	Unit                 string  `json:"unit"`
 }
@@ -140,7 +140,7 @@ type UsageData struct {
 	HomeTadig    *string  `json:"homeTadig,omitempty"`
 	Service      *string  `json:"service,omitempty"`
 	Units        *string  `json:"units,omitempty"`
-	Usage        *float32 `json:"usage,omitempty"`
+	Usage        *float64 `json:"usage,omitempty"`
 	VisitorTadig *string  `json:"visitorTadig,omitempty"`
 	YearMonth    *string  `json:"yearMonth,omitempty"`
 }
@@ -149,10 +149,10 @@ type UsageData struct {
 type UsageDiscrepancyData struct {
 	HTMN              *string  `json:"HTMN,omitempty"`
 	VPMN              *string  `json:"VPMN,omitempty"`
-	DeltaUsageAbs     *float32 `json:"delta_usage_abs,omitempty"`
-	DeltaUsagePercent *float32 `json:"delta_usage_percent,omitempty"`
-	OwnUsage          *float32 `json:"own_usage,omitempty"`
-	PartnerUsage      *float32 `json:"partner_usage,omitempty"`
+	DeltaUsageAbs     *float64 `json:"delta_usage_abs,omitempty"`
+	DeltaUsagePercent *float64 `json:"delta_usage_percent,omitempty"`
+	OwnUsage          *float64 `json:"own_usage,omitempty"`
+	PartnerUsage      *float64 `json:"partner_usage,omitempty"`
 	Service           *string  `json:"service,omitempty"`
 	YearMonth         *string  `json:"yearMonth,omitempty"`
 }

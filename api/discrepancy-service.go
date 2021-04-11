@@ -251,7 +251,7 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 	inbound := make([]UsageDiscrepancyData, 0)
 
 	for key, inUsage := range homeInboundMap {
-		fmt.Println("Key:", key)
+		// fmt.Println("Key:", key)
 		outUsage, ok := partnerOutboundMap[key]
 		if ok {
 			inboundUsageDiscrepancyData := createInOutDetailsRecord(inUsage, outUsage)
@@ -268,7 +268,7 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 	outbound := make([]UsageDiscrepancyData, 0)
 
 	for key, outUsage := range homeOutboundMap {
-		fmt.Println("Key:", key)
+		// fmt.Println("Key:", key)
 		inUsage, ok := partnerInboundMap[key]
 		if ok {
 			outboundUsageDiscrepancyData := createInOutDetailsRecord(outUsage, inUsage)
@@ -337,13 +337,13 @@ func (p *DiscrepancyServer) saveUsageReportsToLocalDB(home, partner Usage) {
 func calculateInOutDiscrepancies(value *GeneralInfoData) GeneralInfoData {
 	delta64 := float64(value.InboundOwnUsage) - float64(value.InboundPartnerUsage)
 	absDelta64 := math.Abs(delta64)
-	absDelta32 := float32(absDelta64)
-	value.InboundDiscrepancy = absDelta32
+	// absDelta32 := float32(absDelta64)
+	value.InboundDiscrepancy = absDelta64
 
 	delta64 = float64(value.OutboundOwnUsage) - float64(value.OutboundPartnerUsage)
 	absDelta64 = math.Abs(delta64)
-	absDelta32 = float32(absDelta64)
-	value.OutboundDiscrepancy = absDelta32
+	// absDelta32 = float32(absDelta64)
+	value.OutboundDiscrepancy = absDelta64
 
 	return *value
 }
@@ -362,8 +362,8 @@ func createInOutDetailsRecord(ownUsage UsageData, partnerUsage UsageData) UsageD
 	// absolute delta
 	delta64 := float64(*ownUsage.Usage) - float64(*partnerUsage.Usage)
 	absDelta64 := math.Abs(delta64)
-	absDelta32 := float32(absDelta64)
-	record.DeltaUsageAbs = &absDelta32
+	// absDelta32 := float32(absDelta64)
+	record.DeltaUsageAbs = &absDelta64
 	// relative delta
 	// [ (A-B) / A] x 100
 	A := *ownUsage.Usage
@@ -381,11 +381,11 @@ func (p *DiscrepancyServer) convertUsageDataArrayToMap(arr []UsageData) map[stri
 	// create output map
 	m := make(map[string]UsageData)
 
-	for index, element := range arr {
-		fmt.Println("At index", index, "value is", toString(element))
+	for _, element := range arr {
+		// fmt.Println("At index", index, "value is", toString(element))
 
 		compositeUsageId := makeUsageIdentifier(element)
-		fmt.Println("compositeUsageId", compositeUsageId)
+		// fmt.Println("compositeUsageId", compositeUsageId)
 
 		var data = []byte(compositeUsageId)
 		var dataBase64 = base64.StdEncoding.EncodeToString(data)
@@ -394,7 +394,7 @@ func (p *DiscrepancyServer) convertUsageDataArrayToMap(arr []UsageData) map[stri
 
 		// sets the hash based key to the given element
 		m[hashKey] = element
-		fmt.Println("Hash key: ", hashKey)
+		// fmt.Println("Hash key: ", hashKey)
 	}
 
 	return m

@@ -184,7 +184,7 @@ components:
           type: string
         usage:
           type: number
-          format: float
+          format: double
         units:
           type: string
     Error:
@@ -217,22 +217,22 @@ components:
           type: string
         inbound_own_usage:
           type: number
-          format: float
+          format: double
         inbound_partner_usage:
           type: number
-          format: float
+          format: double
         inbound_discrepancy:
           type: number
-          format: float
+          format: double
         outbound_own_usage:
           type: number
-          format: float
+          format: double
         outbound_partner_usage:
           type: number
-          format: float
+          format: double
         outbound_discrepancy:
           type: number
-          format: float
+          format: double
     
     UsageDiscrepancyData:
       properties:
@@ -246,16 +246,16 @@ components:
           type: string
         own_usage:
           type: number
-          format: float
+          format: double
         partner_usage:
           type: number
-          format: float
+          format: double
         delta_usage_abs:
           type: number
-          format: float
+          format: double
         delta_usage_percent:
           type: number
-          format: float
+          format: double
               
     UsageDiscrepancyReport:
       properties:
