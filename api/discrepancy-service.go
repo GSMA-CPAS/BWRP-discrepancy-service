@@ -733,6 +733,7 @@ func createSubServicesDetails(ownMap, partnerMap map[string]float32, units strin
 			discrepancyRecord.OwnUsage = ownUsageMap[key]
 			discrepancyRecord.PartnerUsage = partnerUsageMap[key]
 			discrepancyRecord.DeltaUsageAbs = math.Abs(discrepancyRecord.OwnUsage - discrepancyRecord.PartnerUsage)
+			discrepancyRecord.DeltaUsagePercent = calculateRelativeDelta64(discrepancyRecord.OwnUsage, discrepancyRecord.PartnerUsage)
 			discrepancyRecord.OwnCalculation = ownCalculation
 			discrepancyRecord.PartnerCalculation = partnerCalculation
 			discrepancyRecord.DeltaCalculationPercent = calculateRelativeDelta(ownCalculation, partnerCalculation)
@@ -771,6 +772,13 @@ func createGeneralInformation(ownMap, partnerMap map[string]float32, service, un
 }
 
 func calculateRelativeDelta(A, B float32) float32 {
+	// relative delta
+	// [ (A-B) / A] x 100
+	C := ((A - B) / A) * 100.0
+	return C
+}
+
+func calculateRelativeDelta64(A, B float64) float64 {
 	// relative delta
 	// [ (A-B) / A] x 100
 	C := ((A - B) / A) * 100.0
