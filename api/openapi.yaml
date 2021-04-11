@@ -339,16 +339,16 @@ components:
                       $ref: '#/components/schemas/MOC'  
                     MTC:
                       type: number
-                      format: float
+                      format: double
                 SMS:
                   type: object
                   properties:
                     MO:
                       type: number
-                      format: float
+                      format: double
                     MT:
                       type: number
-                      format: float
+                      format: double
                 data:
                   type: array
                   items: 
@@ -361,26 +361,26 @@ components:
           type: string
         value:
           type: number
-          format: float
+          format: double
     
     MOC:
       type: object
       properties:
         local:
           type: number
-          format: float
+          format: double
         backHome:
           type: number
-          format: float
+          format: double
         international:
           type: number
-          format: float
+          format: double
         premium:
           type: number
-          format: float
+          format: double
         ROW:
           type: number
-          format: float
+          format: double
     
     SettlementDiscrepancyReport:
       type: object
@@ -444,11 +444,11 @@ components:
           format: double
         own_calculation:
           type: number
-          format: float
+          format: double
         partner_calculation:
           type: number
-          format: float
+          format: double
         delta_calculation_percent:
           type: number
-          format: float
+          format: double
           

@@ -715,7 +715,7 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	return ctx.JSON(http.StatusOK, report)
 }
 
-func createSubServicesDetails(ownMap, partnerMap map[string]float32, units string, details *[]SettlementDiscrepancyRecord,
+func createSubServicesDetails(ownMap, partnerMap map[string]float64, units string, details *[]SettlementDiscrepancyRecord,
 	ownUsageMap, partnerUsageMap map[string]float64) {
 
 	fmt.Println("createSubServicesDetails")
@@ -736,7 +736,7 @@ func createSubServicesDetails(ownMap, partnerMap map[string]float32, units strin
 			discrepancyRecord.DeltaUsagePercent = calculateRelativeDelta64(discrepancyRecord.OwnUsage, discrepancyRecord.PartnerUsage)
 			discrepancyRecord.OwnCalculation = ownCalculation
 			discrepancyRecord.PartnerCalculation = partnerCalculation
-			discrepancyRecord.DeltaCalculationPercent = calculateRelativeDelta(ownCalculation, partnerCalculation)
+			discrepancyRecord.DeltaCalculationPercent = calculateRelativeDelta64(ownCalculation, partnerCalculation)
 			////
 			fmt.Printf("createSubServicesDetails: DeltaUsageAbs : %f DeltaCalculationPercent %f\n", discrepancyRecord.DeltaUsageAbs,
 				discrepancyRecord.DeltaCalculationPercent)
@@ -746,14 +746,14 @@ func createSubServicesDetails(ownMap, partnerMap map[string]float32, units strin
 	}
 }
 
-func createGeneralInformation(ownMap, partnerMap map[string]float32, service, units string, generalInfoArr *[]SettlementDiscrepancyRecord,
+func createGeneralInformation(ownMap, partnerMap map[string]float64, service, units string, generalInfoArr *[]SettlementDiscrepancyRecord,
 	ownUsageMap, partnerUsageMap map[string]float64) {
 
-	ownCalculationTotalAmount := float32(0)
+	ownCalculationTotalAmount := float64(0)
 	for _, value := range ownMap {
 		ownCalculationTotalAmount += value
 	}
-	partnerCalculationTotalAmount := float32(0)
+	partnerCalculationTotalAmount := float64(0)
 	for _, value := range partnerMap {
 		partnerCalculationTotalAmount += value
 	}
@@ -767,7 +767,7 @@ func createGeneralInformation(ownMap, partnerMap map[string]float32, service, un
 	// Calculations
 	discrepancyRecord.OwnCalculation = ownCalculationTotalAmount
 	discrepancyRecord.PartnerCalculation = partnerCalculationTotalAmount
-	discrepancyRecord.DeltaCalculationPercent = calculateRelativeDelta(ownCalculationTotalAmount, partnerCalculationTotalAmount)
+	discrepancyRecord.DeltaCalculationPercent = calculateRelativeDelta64(ownCalculationTotalAmount, partnerCalculationTotalAmount)
 	*generalInfoArr = append(*generalInfoArr, discrepancyRecord)
 }
 
@@ -785,7 +785,7 @@ func calculateRelativeDelta64(A, B float64) float64 {
 	return C
 }
 
-func createVoiceServicesMap(input SettlementServices) map[string]float32 {
+func createVoiceServicesMap(input SettlementServices) map[string]float64 {
 	fmt.Println("Voice services values:")
 
 	// fmt.Println(input.Services.Voice.MOC.BackHome)
@@ -794,7 +794,7 @@ func createVoiceServicesMap(input SettlementServices) map[string]float32 {
 	// fmt.Println(input.Services.Voice.MOC.Premium)
 	// fmt.Println(input.Services.Voice.MOC.ROW)
 
-	voiceServicesMap := make(map[string]float32, 0)
+	voiceServicesMap := make(map[string]float64, 0)
 
 	backHome := input.Services.Voice.MOC.BackHome
 	local := input.Services.Voice.MOC.Local
@@ -827,11 +827,11 @@ func createVoiceServicesMap(input SettlementServices) map[string]float32 {
 	return voiceServicesMap
 }
 
-func createSMSServicesMap(input SettlementServices) map[string]float32 {
+func createSMSServicesMap(input SettlementServices) map[string]float64 {
 	smsMO := input.Services.SMS.MO
 	smsMT := input.Services.SMS.MT
 
-	smsServicesMap := make(map[string]float32, 0)
+	smsServicesMap := make(map[string]float64, 0)
 
 	if smsMO != nil {
 		smsServicesMap["SMSMO"] = *smsMO
@@ -843,8 +843,8 @@ func createSMSServicesMap(input SettlementServices) map[string]float32 {
 	return smsServicesMap
 }
 
-func createDataServicesMap(input SettlementServices) map[string]float32 {
-	dataServicesMap := make(map[string]float32, 0)
+func createDataServicesMap(input SettlementServices) map[string]float64 {
+	dataServicesMap := make(map[string]float64, 0)
 
 	for _, element := range input.Services.Data {
 		dataServicesMap[*element.Name] = *element.Value

@@ -6,7 +6,7 @@ package api
 // DataService defines model for DataService.
 type DataService struct {
 	Name  *string  `json:"name,omitempty"`
-	Value *float32 `json:"value,omitempty"`
+	Value *float64 `json:"value,omitempty"`
 }
 
 // Error defines model for Error.
@@ -33,11 +33,11 @@ type GeneralInfoData struct {
 
 // MOC defines model for MOC.
 type MOC struct {
-	ROW           *float32 `json:"ROW,omitempty"`
-	BackHome      *float32 `json:"backHome,omitempty"`
-	International *float32 `json:"international,omitempty"`
-	Local         *float32 `json:"local,omitempty"`
-	Premium       *float32 `json:"premium,omitempty"`
+	ROW           *float64 `json:"ROW,omitempty"`
+	BackHome      *float64 `json:"backHome,omitempty"`
+	International *float64 `json:"international,omitempty"`
+	Local         *float64 `json:"local,omitempty"`
+	Premium       *float64 `json:"premium,omitempty"`
 }
 
 // Settlement defines model for Settlement.
@@ -70,12 +70,12 @@ type Settlement struct {
 
 // SettlementDiscrepancyRecord defines model for SettlementDiscrepancyRecord.
 type SettlementDiscrepancyRecord struct {
-	DeltaCalculationPercent float32 `json:"delta_calculation_percent"`
+	DeltaCalculationPercent float64 `json:"delta_calculation_percent"`
 	DeltaUsageAbs           float64 `json:"delta_usage_abs"`
 	DeltaUsagePercent       float64 `json:"delta_usage_percent"`
-	OwnCalculation          float32 `json:"own_calculation"`
+	OwnCalculation          float64 `json:"own_calculation"`
 	OwnUsage                float64 `json:"own_usage"`
-	PartnerCalculation      float32 `json:"partner_calculation"`
+	PartnerCalculation      float64 `json:"partner_calculation"`
 	PartnerUsage            float64 `json:"partner_usage"`
 	Service                 string  `json:"service"`
 	Unit                    string  `json:"unit"`
@@ -98,13 +98,13 @@ type SettlementServices struct {
 	Currency string `json:"currency"`
 	Services struct {
 		SMS struct {
-			MO *float32 `json:"MO,omitempty"`
-			MT *float32 `json:"MT,omitempty"`
+			MO *float64 `json:"MO,omitempty"`
+			MT *float64 `json:"MT,omitempty"`
 		} `json:"SMS"`
 		Data  []DataService `json:"data"`
 		Voice struct {
 			MOC *MOC     `json:"MOC,omitempty"`
-			MTC *float32 `json:"MTC,omitempty"`
+			MTC *float64 `json:"MTC,omitempty"`
 		} `json:"voice"`
 	} `json:"services"`
 }
