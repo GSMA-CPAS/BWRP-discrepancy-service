@@ -205,6 +205,7 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 	}
 
 	// VOICE general information
+	// MOC
 	voiceGeneralInformation := GeneralInfoData{}
 	moc := "MOC"
 	voiceGeneralInformation.Service = moc
@@ -215,6 +216,17 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 	voiceGeneralInformation.InboundPartnerUsage = 0
 	voiceGeneralInformation.OutboundOwnUsage = 0
 	voiceGeneralInformation.OutboundPartnerUsage = 0
+
+	// MTC
+	voiceMTCGeneralInformation := GeneralInfoData{}
+	mtc := "MTC"
+	voiceMTCGeneralInformation.Service = mtc
+	voiceMTCGeneralInformation.Unit = min
+
+	voiceMTCGeneralInformation.InboundOwnUsage = 0
+	voiceMTCGeneralInformation.InboundPartnerUsage = 0
+	voiceMTCGeneralInformation.OutboundOwnUsage = 0
+	voiceMTCGeneralInformation.OutboundPartnerUsage = 0
 
 	// SMS general information
 	smsGeneralInformation := GeneralInfoData{}
@@ -241,10 +253,19 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 
 	for _, element := range generalInformationSubServiceArray {
 		if element.Unit == "min" {
-			voiceGeneralInformation.InboundOwnUsage += element.InboundOwnUsage
-			voiceGeneralInformation.InboundPartnerUsage += element.InboundPartnerUsage
-			voiceGeneralInformation.OutboundOwnUsage += element.OutboundOwnUsage
-			voiceGeneralInformation.OutboundPartnerUsage += element.OutboundPartnerUsage
+			////
+			if element.Service == "MTC" {
+				voiceMTCGeneralInformation.InboundOwnUsage += element.InboundOwnUsage
+				voiceMTCGeneralInformation.InboundPartnerUsage += element.InboundPartnerUsage
+				voiceMTCGeneralInformation.OutboundOwnUsage += element.OutboundOwnUsage
+				voiceMTCGeneralInformation.OutboundPartnerUsage += element.OutboundPartnerUsage
+			} else {
+				////
+				voiceGeneralInformation.InboundOwnUsage += element.InboundOwnUsage
+				voiceGeneralInformation.InboundPartnerUsage += element.InboundPartnerUsage
+				voiceGeneralInformation.OutboundOwnUsage += element.OutboundOwnUsage
+				voiceGeneralInformation.OutboundPartnerUsage += element.OutboundPartnerUsage
+			}
 
 		} else if element.Unit == "SMS" {
 			smsGeneralInformation.InboundOwnUsage += element.InboundOwnUsage
@@ -262,10 +283,11 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 
 	generalInformationSubServiceArray = nil
 
-	generalInformationBearerServiceArray := make([]GeneralInfoData, 3, 3)
+	generalInformationBearerServiceArray := make([]GeneralInfoData, 4, 4)
 	generalInformationBearerServiceArray[0] = calculateInOutDiscrepancies(&voiceGeneralInformation)
-	generalInformationBearerServiceArray[1] = calculateInOutDiscrepancies(&smsGeneralInformation)
-	generalInformationBearerServiceArray[2] = calculateInOutDiscrepancies(&dataGeneralInformation)
+	generalInformationBearerServiceArray[1] = calculateInOutDiscrepancies(&voiceMTCGeneralInformation)
+	generalInformationBearerServiceArray[2] = calculateInOutDiscrepancies(&smsGeneralInformation)
+	generalInformationBearerServiceArray[3] = calculateInOutDiscrepancies(&dataGeneralInformation)
 
 	report.GeneralInformation = &generalInformationBearerServiceArray
 
@@ -738,7 +760,7 @@ func createSubServicesDetails(ownMap, partnerMap map[string]float64, units strin
 	for key, ownCalculation := range ownMap {
 		partnerCalculation := partnerMap[key]
 
-		if !(ownCalculation == 0 && partnerCalculation == 0) { // sub-service sholdn't be sent and can be skipped
+		if !(ownCalculation == 0 && partnerCalculation == 0) { // sub-service shouldn't be sent and can be skipped
 			var discrepancyRecord = SettlementDiscrepancyRecord{}
 			discrepancyRecord.Service = key
 			discrepancyRecord.Unit = units
