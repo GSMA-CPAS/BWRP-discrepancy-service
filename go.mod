@@ -9,5 +9,5 @@ require (
 	github.com/labstack/echo/v4 v4.2.1
 	github.com/tkanos/gonfig v0.0.0-20210106201359-53e13348de2f
 	go.mongodb.org/mongo-driver v1.5.0
-	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0
 )

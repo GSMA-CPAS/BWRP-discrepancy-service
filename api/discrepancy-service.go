@@ -11,20 +11,32 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/labstack/echo/v4"
 	"github.com/tkanos/gonfig"
+	"gopkg.in/yaml.v2"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// type Configuration struct {
+// 	Connection_String string `envconfig:"MONGO_CONN_URL"`
+// }
+
 type Configuration struct {
-	Connection_String string `envconfig:"MONGO_CONN_URL"`
+	Server struct {
+		Connection_String string `yaml:"connection_string" envconfig:"MONGO_CONN_URL"`
+	} `yaml:"server"`
+	Database struct {
+		Username string `yaml:"user"`
+		Password string `yaml:"pass"`
+	} `yaml:"database"`
 }
 
 type ServiceUsage struct {
@@ -42,33 +54,57 @@ type DiscrepancyServer struct {
 func NewDiscrepancyServer() *DiscrepancyServer {
 	fmt.Println("Starting service...")
 
-	// configuration := Configuration{}
-	// err := gonfig.GetConf("config/config.json", &configuration)
+	var config Configuration
+
+	readFile(&config)
+	readEnv(&config)
+
+	// ENV
+	// err := envconfig.Process("", &config)
 	// if err != nil {
-	// 	fmt.Println(fmt.Errorf("Error reading DB connection string: %w", err))
-	// 	configuration.Connection_String = "mongodb://localhost:27017"
+	// 	fmt.Println(fmt.Errorf("Error reading DB connection string: %w - default url will be used instead.", err))
+	// 	config.Server.Connection_String = "mongodb://localhost:27017"
 	// }
 
-	var configuration Configuration
-	err := envconfig.Process("", &configuration)
-	if err != nil {
-		fmt.Println(fmt.Errorf("Error reading DB connection string: %w - default url will be used instead.", err))
-		configuration.Connection_String = "mongodb://localhost:27017"
-	}
-
-	fmt.Printf("Connection string: %s\n", configuration.Connection_String)
+	fmt.Printf("DB connection string: %s\n", config.Server.Connection_String)
+	fmt.Printf("DB username:: %s\n", config.Database.Username)
+	fmt.Printf("DB password: %s\n", config.Database.Password)
 
 	dbAccessCredentials := options.Credential{
-		Username: "root",
-		Password: "root",
+		Username: config.Database.Username,
+		Password: config.Database.Password,
 	}
 
 	return &DiscrepancyServer{
-		// UsageReports:   make(map[int64]Usage),
-		NextId:     1000,
-		config:     configuration,
+		config:     config,
 		credential: dbAccessCredentials,
 	}
+}
+
+func readFile(cfg *Configuration) {
+	f, err := os.Open("config/config.yaml")
+	if err != nil {
+		processError(err)
+	}
+	defer f.Close()
+
+	decoder := yaml.NewDecoder(f)
+	err = decoder.Decode(cfg)
+	if err != nil {
+		processError(err)
+	}
+}
+
+func readEnv(cfg *Configuration) {
+	err := envconfig.Process("", cfg)
+	if err != nil {
+		processError(err)
+	}
+}
+
+func processError(err error) {
+	fmt.Println(err)
+	os.Exit(2)
 }
 
 func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId string, params CalculateUsageDiscrepancyParams) error {
@@ -283,9 +319,7 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 
 func (p *DiscrepancyServer) saveUsageReportsToLocalDB(home, partner Usage) {
 
-	// client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
-
-	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Connection_String).SetAuth(p.credential))
+	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Server.Connection_String).SetAuth(p.credential))
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -314,7 +348,7 @@ func (p *DiscrepancyServer) saveUsageReportsToLocalDB(home, partner Usage) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Deleted %v documents in the trainers collection\n", deleteResult.DeletedCount)
+	fmt.Printf("Deleted %v documents in the usages collection\n", deleteResult.DeletedCount)
 
 	// insert home usage
 	insertResult, err := collection.InsertOne(context.TODO(), home)
@@ -417,7 +451,7 @@ func (p *DiscrepancyServer) FindUsages(ctx echo.Context) error {
 
 	}
 
-	fmt.Printf("Connection string: %s\n", configuration.Connection_String)
+	fmt.Printf("Connection string: %s\n", configuration.Server.Connection_String)
 
 	var usage Usage
 	dtag := "DTAG"
@@ -434,7 +468,7 @@ func (p *DiscrepancyServer) createSubServicesWithUsagesMap(perspective, directio
 	fmt.Println(direction)
 
 	// client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
-	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Connection_String).SetAuth(p.credential))
+	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Server.Connection_String).SetAuth(p.credential))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -509,7 +543,7 @@ func (p *DiscrepancyServer) createBearerServicesWithUsagesMap(perspective, direc
 	fmt.Println(direction)
 
 	// client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
-	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Connection_String).SetAuth(p.credential))
+	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Server.Connection_String).SetAuth(p.credential))
 	if err != nil {
 		log.Fatal(err)
 	}
