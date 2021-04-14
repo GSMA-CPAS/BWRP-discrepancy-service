@@ -25,10 +25,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// type Configuration struct {
-// 	Connection_String string `envconfig:"MONGO_CONN_URL"`
-// }
-
 type Configuration struct {
 	Server struct {
 		Connection_String string `yaml:"connection_string" envconfig:"MONGO_CONN_URL"`
@@ -58,13 +54,6 @@ func NewDiscrepancyServer() *DiscrepancyServer {
 
 	readFile(&config)
 	readEnv(&config)
-
-	// ENV
-	// err := envconfig.Process("", &config)
-	// if err != nil {
-	// 	fmt.Println(fmt.Errorf("Error reading DB connection string: %w - default url will be used instead.", err))
-	// 	config.Server.Connection_String = "mongodb://localhost:27017"
-	// }
 
 	fmt.Printf("DB connection string: %s\n", config.Server.Connection_String)
 	fmt.Printf("DB username:: %s\n", config.Database.Username)
@@ -371,12 +360,10 @@ func (p *DiscrepancyServer) saveUsageReportsToLocalDB(home, partner Usage) {
 func calculateInOutDiscrepancies(value *GeneralInfoData) GeneralInfoData {
 	delta64 := float64(value.InboundOwnUsage) - float64(value.InboundPartnerUsage)
 	absDelta64 := math.Abs(delta64)
-	// absDelta32 := float32(absDelta64)
 	value.InboundDiscrepancy = absDelta64
 
 	delta64 = float64(value.OutboundOwnUsage) - float64(value.OutboundPartnerUsage)
 	absDelta64 = math.Abs(delta64)
-	// absDelta32 = float32(absDelta64)
 	value.OutboundDiscrepancy = absDelta64
 
 	return *value
@@ -396,7 +383,6 @@ func createInOutDetailsRecord(ownUsage UsageData, partnerUsage UsageData) UsageD
 	// absolute delta
 	delta64 := float64(*ownUsage.Usage) - float64(*partnerUsage.Usage)
 	absDelta64 := math.Abs(delta64)
-	// absDelta32 := float32(absDelta64)
 	record.DeltaUsageAbs = &absDelta64
 	// relative delta
 	// [ (A-B) / A] x 100
@@ -467,7 +453,6 @@ func (p *DiscrepancyServer) createSubServicesWithUsagesMap(perspective, directio
 	fmt.Println(perspective)
 	fmt.Println(direction)
 
-	// client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
 	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Server.Connection_String).SetAuth(p.credential))
 	if err != nil {
 		log.Fatal(err)
@@ -500,7 +485,6 @@ func (p *DiscrepancyServer) createSubServicesWithUsagesMap(perspective, directio
 	bodyDirectionWithUsages := "$body." + direction + ".usage"
 	bodyDirectionWithService := "$body." + direction + ".service"
 
-	// unwindStage2 := bson.D{{"$unwind", "$body.inbound"}}
 	unwindStage2 := bson.D{{"$unwind", bodyDirection}}
 
 	// groupStage := bson.D{{"$group", bson.D{{"_id", "$body.inbound.service"}, {"total", bson.D{{"$sum", bodyDirectionWithUsages}}}}}}
@@ -542,7 +526,6 @@ func (p *DiscrepancyServer) createBearerServicesWithUsagesMap(perspective, direc
 	fmt.Println(perspective)
 	fmt.Println(direction)
 
-	// client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
 	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Server.Connection_String).SetAuth(p.credential))
 	if err != nil {
 		log.Fatal(err)
@@ -575,7 +558,6 @@ func (p *DiscrepancyServer) createBearerServicesWithUsagesMap(perspective, direc
 	bodyDirectionWithUsages := "$body." + direction + ".usage"
 	bodyDirectionWithService := "$body." + direction + ".units"
 
-	// unwindStage2 := bson.D{{"$unwind", "$body.inbound"}}
 	unwindStage2 := bson.D{{"$unwind", bodyDirection}}
 
 	// groupStage := bson.D{{"$group", bson.D{{"_id", "$body.inbound.service"}, {"total", bson.D{{"$sum", bodyDirectionWithUsages}}}}}}
@@ -587,7 +569,6 @@ func (p *DiscrepancyServer) createBearerServicesWithUsagesMap(perspective, direc
 		panic(err)
 	}
 
-	// var serviceUsages []bson.M
 	var serviceUsages []ServiceUsage
 	if serviceUsageCursor.TryNext(dbCtx) {
 		if err = serviceUsageCursor.All(dbCtx, &serviceUsages); err != nil {
@@ -783,6 +764,7 @@ func createSubServicesDetails(ownMap, partnerMap map[string]float64, units strin
 func createGeneralInformation(ownMap, partnerMap map[string]float64, service, units string, generalInfoArr *[]SettlementDiscrepancyRecord,
 	ownUsageMap, partnerUsageMap map[string]float64) {
 
+	// perform aggregations
 	ownCalculationTotalAmount := float64(0)
 	for _, value := range ownMap {
 		ownCalculationTotalAmount += value
@@ -794,12 +776,12 @@ func createGeneralInformation(ownMap, partnerMap map[string]float64, service, un
 	discrepancyRecord := SettlementDiscrepancyRecord{}
 	discrepancyRecord.Service = service
 	discrepancyRecord.Unit = units
-	// Usages
+	// usages
 	discrepancyRecord.OwnUsage = ownUsageMap[units]
 	discrepancyRecord.PartnerUsage = partnerUsageMap[units]
 	discrepancyRecord.DeltaUsageAbs = math.Abs(discrepancyRecord.OwnUsage - discrepancyRecord.PartnerUsage)
 	discrepancyRecord.DeltaUsagePercent = calculateRelativeDelta64(discrepancyRecord.OwnUsage, discrepancyRecord.PartnerUsage)
-	// Calculations
+	// calculations
 	discrepancyRecord.OwnCalculation = ownCalculationTotalAmount
 	discrepancyRecord.PartnerCalculation = partnerCalculationTotalAmount
 	discrepancyRecord.DeltaCalculationPercent = calculateRelativeDelta64(ownCalculationTotalAmount, partnerCalculationTotalAmount)
@@ -821,6 +803,7 @@ func createVoiceServicesMap(input SettlementServices) map[string]float64 {
 	// fmt.Println(input.Services.Voice.MOC.Local)
 	// fmt.Println(input.Services.Voice.MOC.Premium)
 	// fmt.Println(input.Services.Voice.MOC.ROW)
+	// fmt.Println(input.Services.Voice.MTC)
 
 	voiceServicesMap := make(map[string]float64, 0)
 
@@ -829,6 +812,8 @@ func createVoiceServicesMap(input SettlementServices) map[string]float64 {
 	premium := input.Services.Voice.MOC.Premium
 	international := input.Services.Voice.MOC.International
 	ROW := input.Services.Voice.MOC.ROW
+	specialDestinations := input.Services.Voice.MOC.SpecialDestinations
+	MTC := input.Services.Voice.MTC
 
 	if backHome != nil {
 		fmt.Printf("backHome: %f\n", *backHome)
@@ -848,9 +833,19 @@ func createVoiceServicesMap(input SettlementServices) map[string]float64 {
 	}
 	if ROW != nil {
 		fmt.Printf("ROW: %f\n", *ROW)
+		voiceServicesMap["MOC Row"] = *ROW
 	}
 
-	// TODO: Add support for MTC and other MOC services
+	if specialDestinations != nil {
+		fmt.Printf("specialDestinations: %f\n", *specialDestinations)
+		voiceServicesMap["MOC Special Destinations"] = *specialDestinations
+	}
+
+	// MTC
+	if MTC != nil {
+		fmt.Printf("MTC: %f\n", *MTC)
+		voiceServicesMap["MTC"] = *MTC
+	}
 
 	return voiceServicesMap
 }

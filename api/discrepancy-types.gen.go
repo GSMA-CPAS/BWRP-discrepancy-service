@@ -33,11 +33,12 @@ type GeneralInfoData struct {
 
 // MOC defines model for MOC.
 type MOC struct {
-	ROW           *float64 `json:"ROW,omitempty"`
-	BackHome      *float64 `json:"backHome,omitempty"`
-	International *float64 `json:"international,omitempty"`
-	Local         *float64 `json:"local,omitempty"`
-	Premium       *float64 `json:"premium,omitempty"`
+	ROW                 *float64 `json:"ROW,omitempty"`
+	BackHome            *float64 `json:"backHome,omitempty"`
+	International       *float64 `json:"international,omitempty"`
+	Local               *float64 `json:"local,omitempty"`
+	Premium             *float64 `json:"premium,omitempty"`
+	SpecialDestinations *float64 `json:"specialDestinations,omitempty"`
 }
 
 // Settlement defines model for Settlement.

@@ -381,6 +381,12 @@ components:
         ROW:
           type: number
           format: double
+        specialDestinations:
+          type: number
+          format: double
+        international:
+          type: number
+          format: double
     
     SettlementDiscrepancyReport:
       type: object
