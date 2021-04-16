@@ -765,18 +765,23 @@ func createSubServicesDetails(ownMap, partnerMap map[string]float64, units strin
 			discrepancyRecord.Service = key
 			discrepancyRecord.Unit = units
 			////
-			fmt.Printf("createSubServicesDetails: key: %s and associoated usages: own = %f, partner = %f\n", key, ownUsageMap[key], partnerUsageMap[key])
+			fmt.Printf("key: %s and associoated usages: own = %f, partner = %f\n", key, ownUsageMap[key], partnerUsageMap[key])
 			////
 			discrepancyRecord.OwnUsage = ownUsageMap[key]
 			discrepancyRecord.PartnerUsage = partnerUsageMap[key]
 			discrepancyRecord.DeltaUsageAbs = math.Abs(discrepancyRecord.OwnUsage - discrepancyRecord.PartnerUsage)
 			discrepancyRecord.DeltaUsagePercent = calculateRelativeDelta64(discrepancyRecord.OwnUsage, discrepancyRecord.PartnerUsage)
+			////
+			fmt.Printf("DeltaUsageAbs : %f DeltaUsagePercent %f\n", discrepancyRecord.DeltaUsageAbs, discrepancyRecord.DeltaUsagePercent)
+			///
 			discrepancyRecord.OwnCalculation = ownCalculation
 			discrepancyRecord.PartnerCalculation = partnerCalculation
+			////
+			fmt.Printf("Own calculation : %f partner calculation %f\n", discrepancyRecord.OwnCalculation, discrepancyRecord.PartnerCalculation)
+			////
 			discrepancyRecord.DeltaCalculationPercent = calculateRelativeDelta64(ownCalculation, partnerCalculation)
 			////
-			fmt.Printf("createSubServicesDetails: DeltaUsageAbs : %f DeltaCalculationPercent %f\n", discrepancyRecord.DeltaUsageAbs,
-				discrepancyRecord.DeltaCalculationPercent)
+			fmt.Printf("DeltaCalculationPercent %f\n", discrepancyRecord.DeltaCalculationPercent)
 			////
 			*details = append(*details, discrepancyRecord)
 		}
@@ -812,8 +817,17 @@ func createGeneralInformation(ownMap, partnerMap map[string]float64, service, un
 
 func calculateRelativeDelta64(A, B float64) float64 {
 	// relative delta
+	zero := float64(0)
+	if A == zero && B == zero {
+		return zero
+	}
+
+	if A == zero || B == zero {
+		return float64(100)
+	}
+
 	// [ (A-B) / A] x 100
-	C := ((A - B) / A) * 100.0
+	C := ((A - B) / A) * 100.0 // C = percent value
 	return C
 }
 
