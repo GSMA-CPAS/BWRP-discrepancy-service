@@ -849,6 +849,8 @@ func createVoiceServicesMap(input SettlementServices) map[string]float64 {
 	international := input.Services.Voice.MOC.International
 	ROW := input.Services.Voice.MOC.ROW
 	specialDestinations := input.Services.Voice.MOC.SpecialDestinations
+	EU := input.Services.Voice.MOC.EU
+	EEA := input.Services.Voice.MOC.EEA
 	MTC := input.Services.Voice.MTC
 
 	if backHome != nil {
@@ -870,6 +872,16 @@ func createVoiceServicesMap(input SettlementServices) map[string]float64 {
 	if ROW != nil {
 		fmt.Printf("ROW: %f\n", *ROW)
 		voiceServicesMap["MOC Row"] = *ROW
+	}
+
+	if EU != nil {
+		fmt.Printf("EU: %f\n", *EU)
+		voiceServicesMap["MOC EU"] = *EU
+	}
+
+	if EEA != nil {
+		fmt.Printf("EEA: %f\n", *EEA)
+		voiceServicesMap["MOC EU"] = *EEA
 	}
 
 	if specialDestinations != nil {

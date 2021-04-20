@@ -384,6 +384,12 @@ components:
         specialDestinations:
           type: number
           format: double
+        EU:
+          type: number
+          format: double
+        EEA:
+          type: number
+          format: double
     
     SettlementDiscrepancyReport:
       type: object

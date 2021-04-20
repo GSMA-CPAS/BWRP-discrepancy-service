@@ -33,6 +33,8 @@ type GeneralInfoData struct {
 
 // MOC defines model for MOC.
 type MOC struct {
+	EEA                 *float64 `json:"EEA,omitempty"`
+	EU                  *float64 `json:"EU,omitempty"`
 	ROW                 *float64 `json:"ROW,omitempty"`
 	BackHome            *float64 `json:"backHome,omitempty"`
 	International       *float64 `json:"international,omitempty"`
