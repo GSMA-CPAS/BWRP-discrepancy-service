@@ -407,11 +407,7 @@ func createInOutDetailsRecord(ownUsage UsageData, partnerUsage UsageData) UsageD
 	absDelta64 := math.Abs(delta64)
 	record.DeltaUsageAbs = &absDelta64
 	// relative delta
-	// [ (A-B) / A] x 100
-	A := *ownUsage.Usage
-	B := *partnerUsage.Usage
-	C := ((A - B) / A) * 100
-
+	C := calculateRelativeDelta64(*ownUsage.Usage, *partnerUsage.Usage)
 	record.DeltaUsagePercent = &C
 
 	return record
