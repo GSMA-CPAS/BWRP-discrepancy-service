@@ -391,7 +391,7 @@ func calculateInOutDiscrepancies(value *GeneralInfoData) GeneralInfoData {
 	return *value
 }
 
-func createInOutDetailsRecord(ownUsage UsageData, partnerUsage UsageData) UsageDiscrepancyData {
+func createInOutDetailsRecord(ownUsage, partnerUsage UsageData) UsageDiscrepancyData {
 
 	var record UsageDiscrepancyData
 	record = UsageDiscrepancyData{}
@@ -565,7 +565,7 @@ func (p *DiscrepancyServer) createBearerServicesWithUsagesMap(perspective, direc
 	fmt.Println("Connected to MongoDB!")
 
 	// db.usages.aggregate( [ { $unwind: "$header" }, { $match: { "header.context": "home" } }, { $unwind: "$body.inbound" },
-	// { $group: { _id: "$body.inbound.service", total: { $sum: "$body.inbound.usage" } } } ] )
+	// { $group: { _id: "$body.inbound.units", total: { $sum: "$body.inbound.usage" } } } ] )
 
 	usagesCollection := client.Database("nomad").Collection("usages")
 	unwindStage1 := bson.D{{"$unwind", "$header"}}
@@ -664,6 +664,7 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	partnerOutboundBearerServiceUsageMap := p.createBearerServicesWithUsagesMap("partner", "outbound")
 
 	// PARTNER PERSPECTIVE
+	// sub-services with usages maps
 	partnerInboundServiceUsageMap := p.createSubServicesWithUsagesMap("partner", "inbound")
 	homeOutboundServiceUsageMap := p.createSubServicesWithUsagesMap("home", "outbound")
 	// bearer services with usages maps
@@ -756,7 +757,7 @@ func createSubServicesDetails(ownMap, partnerMap map[string]float64, units strin
 	for key, ownCalculation := range ownMap {
 		partnerCalculation := partnerMap[key]
 
-		if !(ownCalculation == 0 && partnerCalculation == 0) { // sub-service shouldn't be sent and can be skipped
+		if !(ownCalculation == 0 && partnerCalculation == 0) {
 			var discrepancyRecord = SettlementDiscrepancyRecord{}
 			discrepancyRecord.Service = key
 			discrepancyRecord.Unit = units
@@ -780,7 +781,36 @@ func createSubServicesDetails(ownMap, partnerMap map[string]float64, units strin
 			fmt.Printf("DeltaCalculationPercent %f\n", discrepancyRecord.DeltaCalculationPercent)
 			////
 			*details = append(*details, discrepancyRecord)
+
 		}
+		// else {
+		// 	var discrepancyRecord = SettlementDiscrepancyRecord{}
+		// 	discrepancyRecord.Service = key
+		// 	discrepancyRecord.Unit = units
+		// 	////
+		// 	fmt.Printf("key: %s and associoated usages: own = %f, partner = %f\n", key, ownUsageMap[key], partnerUsageMap[key])
+		// 	////
+		// 	discrepancyRecord.OwnUsage = ownUsageMap[key]
+		// 	discrepancyRecord.PartnerUsage = partnerUsageMap[key]
+
+		// 	// TODO: check if zero usages
+
+		// 	discrepancyRecord.DeltaUsageAbs = math.Abs(discrepancyRecord.OwnUsage - discrepancyRecord.PartnerUsage)
+		// 	discrepancyRecord.DeltaUsagePercent = calculateRelativeDelta64(discrepancyRecord.OwnUsage, discrepancyRecord.PartnerUsage)
+		// 	////
+		// 	fmt.Printf("DeltaUsageAbs : %f DeltaUsagePercent %f\n", discrepancyRecord.DeltaUsageAbs, discrepancyRecord.DeltaUsagePercent)
+		// 	///
+		// 	discrepancyRecord.OwnCalculation = 0
+		// 	discrepancyRecord.PartnerCalculation = 0
+		// 	////
+		// 	fmt.Printf("Own calculation : %f partner calculation %f\n", discrepancyRecord.OwnCalculation, discrepancyRecord.PartnerCalculation)
+		// 	////
+		// 	discrepancyRecord.DeltaCalculationPercent = 0
+		// 	////
+		// 	fmt.Printf("DeltaCalculationPercent %f\n", discrepancyRecord.DeltaCalculationPercent)
+		// 	////
+		// 	*details = append(*details, discrepancyRecord)
+		// }
 	}
 }
 
@@ -848,6 +878,7 @@ func createVoiceServicesMap(input SettlementServices) map[string]float64 {
 	EU := input.Services.Voice.MOC.EU
 	EEA := input.Services.Voice.MOC.EEA
 	MTC := input.Services.Voice.MTC
+	satellite := input.Services.Voice.MOC.Satellite
 
 	if backHome != nil {
 		fmt.Printf("backHome: %f\n", *backHome)
@@ -883,6 +914,11 @@ func createVoiceServicesMap(input SettlementServices) map[string]float64 {
 	if specialDestinations != nil {
 		fmt.Printf("specialDestinations: %f\n", *specialDestinations)
 		voiceServicesMap["MOC Special Destinations"] = *specialDestinations
+	}
+
+	if satellite != nil {
+		fmt.Printf("satellite: %f\n", *satellite)
+		voiceServicesMap["MOC Satellite"] = *satellite
 	}
 
 	// MTC

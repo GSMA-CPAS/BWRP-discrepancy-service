@@ -40,6 +40,7 @@ type MOC struct {
 	International       *float64 `json:"international,omitempty"`
 	Local               *float64 `json:"local,omitempty"`
 	Premium             *float64 `json:"premium,omitempty"`
+	Satellite           *float64 `json:"satellite,omitempty"`
 	SpecialDestinations *float64 `json:"specialDestinations,omitempty"`
 }
 

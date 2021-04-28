@@ -390,6 +390,9 @@ components:
         EEA:
           type: number
           format: double
+        satellite:
+          type: number
+          format: double
     
     SettlementDiscrepancyReport:
       type: object
