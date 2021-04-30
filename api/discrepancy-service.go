@@ -611,6 +611,28 @@ func (p *DiscrepancyServer) createBearerServicesWithUsagesMap(perspective, direc
 	return servicesMap
 }
 
+func mergeMaps(bearserServiceUsageMap, subServiceUsageMap map[string]float64) map[string]float64 {
+	fmt.Println("mergeMaps")
+
+	MTC := "MTC"
+	MOC := "MOC"
+	mtcUsage := subServiceUsageMap[MTC]
+
+	if mtcUsage != 0 {
+		bearserServiceUsageMap[MTC] = mtcUsage
+		bearserServiceUsageMap[MOC] = bearserServiceUsageMap["min"] - mtcUsage
+	} else {
+		bearserServiceUsageMap[MTC] = 0
+		bearserServiceUsageMap[MOC] = bearserServiceUsageMap["min"]
+	}
+
+	for key, element := range bearserServiceUsageMap {
+		fmt.Println("Service:", key, "=>", "Usage:", element)
+	}
+
+	return bearserServiceUsageMap
+}
+
 func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, settlementId string, params CalculateSettlementDiscrepancyParams) error {
 	fmt.Println("Start: CalculateSettlementDiscrepancy")
 
@@ -638,20 +660,24 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 
 	// MAPS OF SERVICES
 	// home inbound
-	homeInboundVoiceServicesMap := createVoiceServicesMap(homeSettlement.Body.Inbound)
+	homeInboundMOCServicesMap := createMOCServicesMap(homeSettlement.Body.Inbound)
+	homeInboundMTCServicesMap := createMTCServicesMap(homeSettlement.Body.Inbound)
 	homeInboundSmsServicesMap := createSMSServicesMap(homeSettlement.Body.Inbound)
 	homeInboundDataServicesMap := createDataServicesMap(homeSettlement.Body.Inbound)
 	// home outbound
-	homeOutboundVoiceServicesMap := createVoiceServicesMap(homeSettlement.Body.Outbound)
+	homeOutboundMOCServicesMap := createMOCServicesMap(homeSettlement.Body.Outbound)
+	homeOutboundMTCServicesMap := createMTCServicesMap(homeSettlement.Body.Outbound)
 	homeOutboundSmsServicesMap := createSMSServicesMap(homeSettlement.Body.Outbound)
 	homeOutboundDataServicesMap := createDataServicesMap(homeSettlement.Body.Outbound)
 
 	// partner outbound
-	partnerOutboundVoiceServicesMap := createVoiceServicesMap(partnerSettlement.Body.Outbound)
+	partnerOutboundMOCServicesMap := createMOCServicesMap(partnerSettlement.Body.Outbound)
+	partnerOutboundMTCServicesMap := createMTCServicesMap(partnerSettlement.Body.Outbound)
 	partnerOutboundSmsServicesMap := createSMSServicesMap(partnerSettlement.Body.Outbound)
 	partnerOutboundDataServicesMap := createDataServicesMap(partnerSettlement.Body.Outbound)
 	// partner inbound
-	partnerInboundVoiceServicesMap := createVoiceServicesMap(partnerSettlement.Body.Inbound)
+	partnerInboundMOCServicesMap := createMOCServicesMap(partnerSettlement.Body.Inbound)
+	partnerInboundMTCServicesMap := createMTCServicesMap(partnerSettlement.Body.Inbound)
 	partnerInboundSmsServicesMap := createSMSServicesMap(partnerSettlement.Body.Inbound)
 	partnerInboundDataServicesMap := createDataServicesMap(partnerSettlement.Body.Inbound)
 
@@ -661,7 +687,10 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	partnerOutboundServiceUsageMap := p.createSubServicesWithUsagesMap("partner", "outbound")
 	// bearer services with usages maps
 	homeInboundBearerServiceUsageMap := p.createBearerServicesWithUsagesMap("home", "inbound")
+	homeInboundBearerServiceUsageMap = mergeMaps(homeInboundBearerServiceUsageMap, homeInboundServiceUsageMap)
+
 	partnerOutboundBearerServiceUsageMap := p.createBearerServicesWithUsagesMap("partner", "outbound")
+	partnerOutboundBearerServiceUsageMap = mergeMaps(partnerOutboundBearerServiceUsageMap, partnerOutboundServiceUsageMap)
 
 	// PARTNER PERSPECTIVE
 	// sub-services with usages maps
@@ -669,14 +698,23 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	homeOutboundServiceUsageMap := p.createSubServicesWithUsagesMap("home", "outbound")
 	// bearer services with usages maps
 	partnerInboundBearerServiceUsageMap := p.createBearerServicesWithUsagesMap("partner", "inbound")
+	partnerInboundBearerServiceUsageMap = mergeMaps(partnerInboundBearerServiceUsageMap, partnerInboundServiceUsageMap)
+
 	homeOutboundBearerServiceUsageMap := p.createBearerServicesWithUsagesMap("home", "outbound")
+	homeOutboundBearerServiceUsageMap = mergeMaps(homeOutboundBearerServiceUsageMap, homeOutboundServiceUsageMap)
+
+	// DISCREPANCY REPORT
 
 	// HOME PERSPECTIVE
 	// Home Perspective details: home inbound & partner outbound
 	homePerspectiveDetails := make([]SettlementDiscrepancyRecord, 0)
 
-	// voice sub-services details
-	createSubServicesDetails(homeInboundVoiceServicesMap, partnerOutboundVoiceServicesMap, "min", &homePerspectiveDetails,
+	// MOC sub-services details
+	createSubServicesDetails(homeInboundMOCServicesMap, partnerOutboundMOCServicesMap, "min", &homePerspectiveDetails,
+		homeInboundServiceUsageMap, partnerOutboundServiceUsageMap)
+
+	// MTC sub-services details
+	createSubServicesDetails(homeInboundMTCServicesMap, partnerOutboundMTCServicesMap, "min", &homePerspectiveDetails,
 		homeInboundServiceUsageMap, partnerOutboundServiceUsageMap)
 
 	// SMS sub-services details
@@ -690,8 +728,12 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	// Home Perspective general information: home inbound & partner outbound
 	homePerspectiveGeneralInfo := make([]SettlementDiscrepancyRecord, 0)
 
-	// voice general information
-	createGeneralInformation(homeInboundVoiceServicesMap, partnerOutboundVoiceServicesMap, "Voice", "min", &homePerspectiveGeneralInfo,
+	// MOC general information
+	createGeneralInformation(homeInboundMOCServicesMap, partnerOutboundMOCServicesMap, "MOC", "MOC", &homePerspectiveGeneralInfo,
+		homeInboundBearerServiceUsageMap, partnerOutboundBearerServiceUsageMap)
+
+	// MTC general information
+	createGeneralInformation(homeInboundMTCServicesMap, partnerOutboundMTCServicesMap, "MTC", "MTC", &homePerspectiveGeneralInfo,
 		homeInboundBearerServiceUsageMap, partnerOutboundBearerServiceUsageMap)
 
 	// SMS general information
@@ -706,8 +748,12 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	// Partner Perspective details: partner inbound & home outbound
 	partnerPerspectiveDetails := make([]SettlementDiscrepancyRecord, 0)
 
-	// voice sub-services details
-	createSubServicesDetails(partnerInboundVoiceServicesMap, homeOutboundVoiceServicesMap, "min", &partnerPerspectiveDetails,
+	// MOC sub-services details
+	createSubServicesDetails(partnerInboundMOCServicesMap, homeOutboundMOCServicesMap, "min", &partnerPerspectiveDetails,
+		partnerInboundServiceUsageMap, homeOutboundServiceUsageMap)
+
+	// MTC sub-services details
+	createSubServicesDetails(partnerInboundMTCServicesMap, homeOutboundMTCServicesMap, "min", &partnerPerspectiveDetails,
 		partnerInboundServiceUsageMap, homeOutboundServiceUsageMap)
 
 	// SMS sub-services details
@@ -721,8 +767,12 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	// Partner Perspective general information: partner inbound & home outbound
 	partnerPerspectiveGeneralInfo := make([]SettlementDiscrepancyRecord, 0)
 
-	// voice general information
-	createGeneralInformation(partnerInboundVoiceServicesMap, homeOutboundVoiceServicesMap, "Voice", "min", &partnerPerspectiveGeneralInfo,
+	// MOC general information
+	createGeneralInformation(partnerInboundMOCServicesMap, homeOutboundMOCServicesMap, "MOC", "MOC", &partnerPerspectiveGeneralInfo,
+		partnerInboundBearerServiceUsageMap, homeOutboundBearerServiceUsageMap)
+
+	// MTC general information
+	createGeneralInformation(partnerInboundMTCServicesMap, homeOutboundMTCServicesMap, "MTC", "MTC", &partnerPerspectiveGeneralInfo,
 		partnerInboundBearerServiceUsageMap, homeOutboundBearerServiceUsageMap)
 
 	// SMS general information
@@ -782,35 +832,35 @@ func createSubServicesDetails(ownMap, partnerMap map[string]float64, units strin
 			////
 			*details = append(*details, discrepancyRecord)
 
+		} else {
+			////
+			fmt.Printf("key: %s and associoated usages: own = %f, partner = %f\n", key, ownUsageMap[key], partnerUsageMap[key])
+			////
+			if ownUsageMap[key] != 0 || partnerUsageMap[key] != 0 {
+				var discrepancyRecord = SettlementDiscrepancyRecord{}
+				discrepancyRecord.Service = key
+				discrepancyRecord.Unit = units
+
+				discrepancyRecord.OwnUsage = ownUsageMap[key]
+				discrepancyRecord.PartnerUsage = partnerUsageMap[key]
+
+				discrepancyRecord.DeltaUsageAbs = math.Abs(discrepancyRecord.OwnUsage - discrepancyRecord.PartnerUsage)
+				discrepancyRecord.DeltaUsagePercent = calculateRelativeDelta64(discrepancyRecord.OwnUsage, discrepancyRecord.PartnerUsage)
+				////
+				fmt.Printf("DeltaUsageAbs : %f DeltaUsagePercent %f\n", discrepancyRecord.DeltaUsageAbs, discrepancyRecord.DeltaUsagePercent)
+				///
+				discrepancyRecord.OwnCalculation = 0
+				discrepancyRecord.PartnerCalculation = 0
+				////
+				fmt.Printf("Own calculation : %f partner calculation %f\n", discrepancyRecord.OwnCalculation, discrepancyRecord.PartnerCalculation)
+				////
+				discrepancyRecord.DeltaCalculationPercent = 0
+				////
+				fmt.Printf("DeltaCalculationPercent %f\n", discrepancyRecord.DeltaCalculationPercent)
+				////
+				*details = append(*details, discrepancyRecord)
+			}
 		}
-		// else {
-		// 	var discrepancyRecord = SettlementDiscrepancyRecord{}
-		// 	discrepancyRecord.Service = key
-		// 	discrepancyRecord.Unit = units
-		// 	////
-		// 	fmt.Printf("key: %s and associoated usages: own = %f, partner = %f\n", key, ownUsageMap[key], partnerUsageMap[key])
-		// 	////
-		// 	discrepancyRecord.OwnUsage = ownUsageMap[key]
-		// 	discrepancyRecord.PartnerUsage = partnerUsageMap[key]
-
-		// 	// TODO: check if zero usages
-
-		// 	discrepancyRecord.DeltaUsageAbs = math.Abs(discrepancyRecord.OwnUsage - discrepancyRecord.PartnerUsage)
-		// 	discrepancyRecord.DeltaUsagePercent = calculateRelativeDelta64(discrepancyRecord.OwnUsage, discrepancyRecord.PartnerUsage)
-		// 	////
-		// 	fmt.Printf("DeltaUsageAbs : %f DeltaUsagePercent %f\n", discrepancyRecord.DeltaUsageAbs, discrepancyRecord.DeltaUsagePercent)
-		// 	///
-		// 	discrepancyRecord.OwnCalculation = 0
-		// 	discrepancyRecord.PartnerCalculation = 0
-		// 	////
-		// 	fmt.Printf("Own calculation : %f partner calculation %f\n", discrepancyRecord.OwnCalculation, discrepancyRecord.PartnerCalculation)
-		// 	////
-		// 	discrepancyRecord.DeltaCalculationPercent = 0
-		// 	////
-		// 	fmt.Printf("DeltaCalculationPercent %f\n", discrepancyRecord.DeltaCalculationPercent)
-		// 	////
-		// 	*details = append(*details, discrepancyRecord)
-		// }
 	}
 }
 
@@ -828,7 +878,13 @@ func createGeneralInformation(ownMap, partnerMap map[string]float64, service, un
 	}
 	discrepancyRecord := SettlementDiscrepancyRecord{}
 	discrepancyRecord.Service = service
-	discrepancyRecord.Unit = units
+
+	if service == "MOC" || service == "MTC" {
+		discrepancyRecord.Unit = "min"
+	} else {
+		discrepancyRecord.Unit = units
+	}
+
 	// usages
 	discrepancyRecord.OwnUsage = ownUsageMap[units]
 	discrepancyRecord.PartnerUsage = partnerUsageMap[units]
@@ -857,15 +913,20 @@ func calculateRelativeDelta64(A, B float64) float64 {
 	return C
 }
 
-func createVoiceServicesMap(input SettlementServices) map[string]float64 {
-	fmt.Println("Voice services values:")
+func createMTCServicesMap(input SettlementServices) map[string]float64 {
+	voiceServicesMap := make(map[string]float64, 0)
+	MTC := input.Services.Voice.MTC
 
-	// fmt.Println(input.Services.Voice.MOC.BackHome)
-	// fmt.Println(input.Services.Voice.MOC.International)
-	// fmt.Println(input.Services.Voice.MOC.Local)
-	// fmt.Println(input.Services.Voice.MOC.Premium)
-	// fmt.Println(input.Services.Voice.MOC.ROW)
-	// fmt.Println(input.Services.Voice.MTC)
+	if MTC != nil {
+		fmt.Printf("MTC: %f\n", *MTC)
+		voiceServicesMap["MTC"] = *MTC
+	}
+
+	return voiceServicesMap
+}
+
+func createMOCServicesMap(input SettlementServices) map[string]float64 {
+	fmt.Println("MOC services values:")
 
 	voiceServicesMap := make(map[string]float64, 0)
 
@@ -877,7 +938,7 @@ func createVoiceServicesMap(input SettlementServices) map[string]float64 {
 	specialDestinations := input.Services.Voice.MOC.SpecialDestinations
 	EU := input.Services.Voice.MOC.EU
 	EEA := input.Services.Voice.MOC.EEA
-	MTC := input.Services.Voice.MTC
+	// MTC := input.Services.Voice.MTC
 	satellite := input.Services.Voice.MOC.Satellite
 
 	if backHome != nil {
@@ -922,10 +983,10 @@ func createVoiceServicesMap(input SettlementServices) map[string]float64 {
 	}
 
 	// MTC
-	if MTC != nil {
-		fmt.Printf("MTC: %f\n", *MTC)
-		voiceServicesMap["MTC"] = *MTC
-	}
+	// if MTC != nil {
+	// 	fmt.Printf("MTC: %f\n", *MTC)
+	// 	voiceServicesMap["MTC"] = *MTC
+	// }
 
 	return voiceServicesMap
 }
