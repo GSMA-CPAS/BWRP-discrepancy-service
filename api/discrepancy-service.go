@@ -30,8 +30,8 @@ type Configuration struct {
 		Connection_String string `yaml:"connection_string" envconfig:"MONGO_CONN_URL"`
 	} `yaml:"server"`
 	Database struct {
-		Username string `yaml:"user"`
-		Password string `yaml:"pass"`
+		Username string `yaml:"user" envconfig:"DB_USER"`
+		Password string `yaml:"pass" envconfig:"DB_PASSWD"`
 	} `yaml:"database"`
 }
 
@@ -52,6 +52,7 @@ func NewDiscrepancyServer() *DiscrepancyServer {
 
 	var config Configuration
 
+	// db connection string and credentials provisioned in config file but they can be overriden from env vars
 	readFile(&config)
 	readEnv(&config)
 
@@ -253,14 +254,13 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 
 	for _, element := range generalInformationSubServiceArray {
 		if element.Unit == "min" {
-			////
 			if element.Service == "MTC" {
 				voiceMTCGeneralInformation.InboundOwnUsage += element.InboundOwnUsage
 				voiceMTCGeneralInformation.InboundPartnerUsage += element.InboundPartnerUsage
 				voiceMTCGeneralInformation.OutboundOwnUsage += element.OutboundOwnUsage
 				voiceMTCGeneralInformation.OutboundPartnerUsage += element.OutboundPartnerUsage
 			} else {
-				////
+
 				voiceGeneralInformation.InboundOwnUsage += element.InboundOwnUsage
 				voiceGeneralInformation.InboundPartnerUsage += element.InboundPartnerUsage
 				voiceGeneralInformation.OutboundOwnUsage += element.OutboundOwnUsage
@@ -298,7 +298,6 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 	inbound := make([]UsageDiscrepancyData, 0)
 
 	for key, inUsage := range homeInboundMap {
-		// fmt.Println("Key:", key)
 		outUsage, ok := partnerOutboundMap[key]
 		if ok {
 			inboundUsageDiscrepancyData := createInOutDetailsRecord(inUsage, outUsage)
@@ -315,7 +314,6 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 	outbound := make([]UsageDiscrepancyData, 0)
 
 	for key, outUsage := range homeOutboundMap {
-		// fmt.Println("Key:", key)
 		inUsage, ok := partnerInboundMap[key]
 		if ok {
 			outboundUsageDiscrepancyData := createInOutDetailsRecord(outUsage, inUsage)
@@ -432,7 +430,7 @@ func (p *DiscrepancyServer) convertUsageDataArrayToMap(arr []UsageData) map[stri
 
 		// sets the hash based key to the given element
 		m[hashKey] = element
-		// fmt.Println("Hash key: ", hashKey)
+
 	}
 
 	return m
@@ -514,7 +512,6 @@ func (p *DiscrepancyServer) createSubServicesWithUsagesMap(perspective, directio
 		panic(err)
 	}
 
-	// var serviceUsages []bson.M
 	var serviceUsages []ServiceUsage
 	if serviceUsageCursor.TryNext(dbCtx) {
 		if err = serviceUsageCursor.All(dbCtx, &serviceUsages); err != nil {
@@ -846,18 +843,15 @@ func createSubServicesDetails(ownMap, partnerMap map[string]float64, units strin
 
 				discrepancyRecord.DeltaUsageAbs = math.Abs(discrepancyRecord.OwnUsage - discrepancyRecord.PartnerUsage)
 				discrepancyRecord.DeltaUsagePercent = calculateRelativeDelta64(discrepancyRecord.OwnUsage, discrepancyRecord.PartnerUsage)
-				////
 				fmt.Printf("DeltaUsageAbs : %f DeltaUsagePercent %f\n", discrepancyRecord.DeltaUsageAbs, discrepancyRecord.DeltaUsagePercent)
-				///
+
 				discrepancyRecord.OwnCalculation = 0
 				discrepancyRecord.PartnerCalculation = 0
-				////
 				fmt.Printf("Own calculation : %f partner calculation %f\n", discrepancyRecord.OwnCalculation, discrepancyRecord.PartnerCalculation)
-				////
+
 				discrepancyRecord.DeltaCalculationPercent = 0
-				////
 				fmt.Printf("DeltaCalculationPercent %f\n", discrepancyRecord.DeltaCalculationPercent)
-				////
+
 				*details = append(*details, discrepancyRecord)
 			}
 		}
@@ -938,7 +932,6 @@ func createMOCServicesMap(input SettlementServices) map[string]float64 {
 	specialDestinations := input.Services.Voice.MOC.SpecialDestinations
 	EU := input.Services.Voice.MOC.EU
 	EEA := input.Services.Voice.MOC.EEA
-	// MTC := input.Services.Voice.MTC
 	satellite := input.Services.Voice.MOC.Satellite
 
 	if backHome != nil {
@@ -981,12 +974,6 @@ func createMOCServicesMap(input SettlementServices) map[string]float64 {
 		fmt.Printf("satellite: %f\n", *satellite)
 		voiceServicesMap["MOC Satellite"] = *satellite
 	}
-
-	// MTC
-	// if MTC != nil {
-	// 	fmt.Printf("MTC: %f\n", *MTC)
-	// 	voiceServicesMap["MTC"] = *MTC
-	// }
 
 	return voiceServicesMap
 }
