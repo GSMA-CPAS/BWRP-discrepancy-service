@@ -336,19 +336,19 @@ components:
                   properties:
                     MOC:
                       type: object
-                      $ref: '#/components/schemas/MOC'  
+                      $ref: '#/components/schemas/MOC'
                     MTC:
-                      type: number
-                      format: double
+                      type: object
+                      $ref: '#/components/schemas/TelcoService'
                 SMS:
                   type: object
                   properties:
                     MO:
-                      type: number
-                      format: double
+                      type: object
+                      $ref: '#/components/schemas/TelcoService'
                     MT:
-                      type: number
-                      format: double
+                      type: object
+                      $ref: '#/components/schemas/TelcoService'
                 data:
                   type: array
                   items: 
@@ -360,6 +360,19 @@ components:
         name:
           type: string
         value:
+          type: object
+          $ref: '#/components/schemas/TelcoService'
+    
+    TelcoService:
+      type: object
+      properties:
+        dealValue:
+          type: number
+          format: double
+        shortOfCommitment:
+          type: number
+          format: double
+        usage:
           type: number
           format: double
     
@@ -367,36 +380,64 @@ components:
       type: object
       properties:
         local:
-          type: number
-          format: double
+          type: object
+          $ref: '#/components/schemas/TelcoService'
         backHome:
-          type: number
-          format: double
+          type: object
+          $ref: '#/components/schemas/TelcoService'
         international:
-          type: number
-          format: double
+          type: object
+          $ref: '#/components/schemas/TelcoService'
         premium:
-          type: number
-          format: double
+          type: object
+          $ref: '#/components/schemas/TelcoService'
         ROW:
-          type: number
-          format: double
+          type: object
+          $ref: '#/components/schemas/TelcoService'
         specialDestinations:
-          type: number
-          format: double
+          type: object
+          $ref: '#/components/schemas/TelcoService'
         EU:
-          type: number
-          format: double
+          type: object
+          $ref: '#/components/schemas/TelcoService'
         EEA:
-          type: number
-          format: double
+          type: object
+          $ref: '#/components/schemas/TelcoService'
         satellite:
-          type: number
-          format: double
+          type: object
+          $ref: '#/components/schemas/TelcoService'
     
     SettlementDiscrepancyReport:
       type: object
       properties:
+        settlementReport:
+          type: object
+          required:
+            - homeRevenue
+            - partnerRevenue
+            - homeCharges
+            - partnerCharges
+            - homeDeltaRevenue
+            - partnerDeltaRevenue
+          properties:
+            homeRevenue:
+              type: number
+              format: double
+            partnerRevenue:
+              type: number
+              format: double
+            homeCharges:
+              type: number
+              format: double
+            partnerCharges:
+              type: number
+              format: double
+            homeDeltaRevenue:
+              type: number
+              format: double
+            partnerDeltaRevenue:
+              type: number
+              format: double
         homePerspective:
           type: object
           required:

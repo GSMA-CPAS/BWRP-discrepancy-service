@@ -19,51 +19,131 @@
             "services":{
                "voice":{
                   "MOC":{
-                     "local":7524.8037,
-                     "backHome":24386.7948,
-                     "international":0,
-                     "premium":0,
-                     "ROW":0,
-                     "EU":0,
-                     "EEA":0,
-                     "satellite":0,
-                     "videoTelephony":0,
-                     "specialDestinations":0
+                     "local":{
+                        "dealValue":7524.8037,
+                        "shortOfCommitment":50,
+                        "usage":0
+                     },             
+                     "backHome":{
+                        "dealValue":24386.7948,
+                        "shortOfCommitment":50,
+                        "usage":0
+                     },
+                     "international":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "premium":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                      },
+                     "ROW":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "EU":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "EEA":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "satellite":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "videoTelephony":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "specialDestinations":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                   },
-                  "MTC":0
+                  "MTC":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                },
                "SMS":{
-                  "MO":66966.06,
-                  "MT":0
+                  "MO":{
+                        "dealValue":66966.06,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                  "MT":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                },
                "data":[
                   {
                      "name":"GPRS",
-                     "value":299827.44950000005
+                     "value":{
+                        "dealValue":299827.44950000005,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                   },
                   {
                      "name":"M2M",
-                     "value":0
+                     "value":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                   },
                   {
                      "name":"NB-IOT",
-                     "value":0
+                     "value":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                   },
                   {
                      "name":"LTE-M",
-                     "value":0
+                     "value":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                   },
                   {
                      "name":"VoLTE",
-                     "value":0
+                     "value":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                   },
                   {
                      "name":"ViLTE",
-                     "value":0
+                     "value":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                   },
                   {
                      "name":"signalling",
-                     "value":0
+                     "value":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                   }
                ],
                "access":{
@@ -79,51 +159,131 @@
             "services":{
                "voice":{
                   "MOC":{
-                     "local":13608.236,
-                     "backHome":41350.601599999995,
-                     "international":0,
-                     "premium":0,
-                     "ROW":0,
-                     "EU":0,
-                     "EEA":0,
-                     "satellite":0,
-                     "videoTelephony":0,
-                     "specialDestinations":0
+                     "local":{
+                        "dealValue":13608.236,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "backHome":{
+                        "dealValue":41350.601599999995,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "international":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "premium":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "ROW":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "EU":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "EEA":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "satellite":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "videoTelephony":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "specialDestinations":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                   },
-                  "MTC":0
+                  "MTC":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                },
                "SMS":{
-                  "MO":53479.75,
-                  "MT":0
+                  "MO":{
+                        "dealValue":53479.75,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                  "MT":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                },
                "data":[
                   {
                      "name":"GPRS",
-                     "value":158534.70630000002
+                     "value":{
+                        "dealValue":158534.70630000002,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                   },
                   {
                      "name":"M2M",
-                     "value":0
+                     "value":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                   },
                   {
                      "name":"NB-IOT",
-                     "value":0
+                     "value":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                   },
                   {
                      "name":"LTE-M",
-                     "value":0
+                     "value":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                   },
                   {
                      "name":"VoLTE",
-                     "value":0
+                     "value":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                   },
                   {
                      "name":"ViLTE",
-                     "value":0
+                     "value":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                   },
                   {
                      "name":"signalling",
-                     "value":0
+                     "value":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                   }
                ],
                "access":{
@@ -155,51 +315,131 @@
             "services":{
                "voice":{
                   "MOC":{
-                     "local":13613.767000000002,
-                     "backHome":41396.948,
-                     "international":0,
-                     "premium":0,
-                     "ROW":0,
-                     "EU":0,
-                     "EEA":0,
-                     "satellite":0,
-                     "videoTelephony":0,
-                     "specialDestinations":0
+                     "local":{
+                        "dealValue":13613.767000000002,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "backHome":{
+                        "dealValue":41396.948,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "international":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "premium":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "ROW":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "EU":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "EEA":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                      },
+                     "satellite":{
+                         "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                      },
+                     "videoTelephony":{
+                         "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "specialDestinations":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                      }
                   },
-                  "MTC":0
+                  "MTC":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                },
                "SMS":{
-                  "MO":53126.82,
-                  "MT":0
+                  "MO":{
+                        "dealValue":53126.82,
+                        "shortOfCommitment":0,
+                        "usage":0
+                      },
+                  "MT":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                      }
                },
                "data":[
                   {
                      "name":"GPRS",
-                     "value":158036.79800000004
+                     "value":{
+                        "dealValue":158036.79800000004,
+                        "shortOfCommitment":0,
+                        "usage":0
+                      }
                   },
                   {
                      "name":"M2M",
-                     "value":0
+                     "value":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                      }
                   },
                   {
                      "name":"NB-IOT",
-                     "value":0
+                     "value":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                      }
                   },
                   {
                      "name":"LTE-M",
-                     "value":0
+                     "value":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                      }
                   },
                   {
                      "name":"VoLTE",
-                     "value":0
+                     "value":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                      }
                   },
                   {
                      "name":"ViLTE",
-                     "value":0
+                     "value":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                      }
                   },
                   {
                      "name":"signalling",
-                     "value":0
+                     "value":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                      }
                   }
                ],
                "access":{
@@ -215,51 +455,131 @@
             "services":{
                "voice":{
                   "MOC":{
-                     "local":7515.862,
-                     "backHome":24223.4,
-                     "international":0,
-                     "premium":0,
-                     "ROW":0,
-                     "EU":0,
-                     "EEA":0,
-                     "satellite":0,
-                     "videoTelephony":0,
-                     "specialDestinations":0
+                     "local":{
+                        "dealValue":7515.862,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "backHome":{
+                        "dealValue":24223.4,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "international":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "premium":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "ROW":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "EU":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "EEA":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "satellite":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "videoTelephony":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                     "specialDestinations":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                   },
-                  "MTC":0
+                  "MTC":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                },
                "SMS":{
-                  "MO":66822.33,
-                  "MT":0
+                  "MO":{
+                        "dealValue":66822.33,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     },
+                  "MT":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                },
                "data":[
                   {
                      "name":"GPRS",
-                     "value":299405.124
+                     "value":{
+                        "dealValue":299405.124,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                   },
                   {
                      "name":"M2M",
-                     "value":0
+                     "value":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                   },
                   {
                      "name":"NB-IOT",
-                     "value":0
+                     "value":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                   },
                   {
                      "name":"LTE-M",
-                     "value":0
+                     "value":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                   },
                   {
                      "name":"VoLTE",
-                     "value":0
+                     "value":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                   },
                   {
                      "name":"ViLTE",
-                     "value":0
+                     "value":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                   },
                   {
                      "name":"signalling",
-                     "value":0
+                     "value":{
+                        "dealValue":0,
+                        "shortOfCommitment":0,
+                        "usage":0
+                     }
                   }
                ],
                "access":{

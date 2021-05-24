@@ -5,8 +5,8 @@ package api
 
 // DataService defines model for DataService.
 type DataService struct {
-	Name  *string  `json:"name,omitempty"`
-	Value *float64 `json:"value,omitempty"`
+	Name  *string       `json:"name,omitempty"`
+	Value *TelcoService `json:"value,omitempty"`
 }
 
 // Error defines model for Error.
@@ -33,15 +33,15 @@ type GeneralInfoData struct {
 
 // MOC defines model for MOC.
 type MOC struct {
-	EEA                 *float64 `json:"EEA,omitempty"`
-	EU                  *float64 `json:"EU,omitempty"`
-	ROW                 *float64 `json:"ROW,omitempty"`
-	BackHome            *float64 `json:"backHome,omitempty"`
-	International       *float64 `json:"international,omitempty"`
-	Local               *float64 `json:"local,omitempty"`
-	Premium             *float64 `json:"premium,omitempty"`
-	Satellite           *float64 `json:"satellite,omitempty"`
-	SpecialDestinations *float64 `json:"specialDestinations,omitempty"`
+	EEA                 *TelcoService `json:"EEA,omitempty"`
+	EU                  *TelcoService `json:"EU,omitempty"`
+	ROW                 *TelcoService `json:"ROW,omitempty"`
+	BackHome            *TelcoService `json:"backHome,omitempty"`
+	International       *TelcoService `json:"international,omitempty"`
+	Local               *TelcoService `json:"local,omitempty"`
+	Premium             *TelcoService `json:"premium,omitempty"`
+	Satellite           *TelcoService `json:"satellite,omitempty"`
+	SpecialDestinations *TelcoService `json:"specialDestinations,omitempty"`
 }
 
 // Settlement defines model for Settlement.
@@ -95,6 +95,14 @@ type SettlementDiscrepancyReport struct {
 		Details            []SettlementDiscrepancyRecord `json:"details"`
 		GeneralInformation []SettlementDiscrepancyRecord `json:"general_information"`
 	} `json:"partnerPerspective,omitempty"`
+	SettlementReport *struct {
+		HomeCharges         float64 `json:"homeCharges"`
+		HomeDeltaRevenue    float64 `json:"homeDeltaRevenue"`
+		HomeRevenue         float64 `json:"homeRevenue"`
+		PartnerCharges      float64 `json:"partnerCharges"`
+		PartnerDeltaRevenue float64 `json:"partnerDeltaRevenue"`
+		PartnerRevenue      float64 `json:"partnerRevenue"`
+	} `json:"settlementReport,omitempty"`
 }
 
 // SettlementServices defines model for SettlementServices.
@@ -102,15 +110,22 @@ type SettlementServices struct {
 	Currency string `json:"currency"`
 	Services struct {
 		SMS struct {
-			MO *float64 `json:"MO,omitempty"`
-			MT *float64 `json:"MT,omitempty"`
+			MO *TelcoService `json:"MO,omitempty"`
+			MT *TelcoService `json:"MT,omitempty"`
 		} `json:"SMS"`
 		Data  []DataService `json:"data"`
 		Voice struct {
-			MOC *MOC     `json:"MOC,omitempty"`
-			MTC *float64 `json:"MTC,omitempty"`
+			MOC *MOC          `json:"MOC,omitempty"`
+			MTC *TelcoService `json:"MTC,omitempty"`
 		} `json:"voice"`
 	} `json:"services"`
+}
+
+// TelcoService defines model for TelcoService.
+type TelcoService struct {
+	DealValue         *float64 `json:"dealValue,omitempty"`
+	ShortOfCommitment *float64 `json:"shortOfCommitment,omitempty"`
+	Usage             *float64 `json:"usage,omitempty"`
 }
 
 // Usage defines model for Usage.

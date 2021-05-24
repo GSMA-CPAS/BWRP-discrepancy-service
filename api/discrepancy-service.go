@@ -655,7 +655,7 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	fmt.Println(homeSettlement.Header.Context)
 	fmt.Println(partnerSettlement.Header.Context)
 
-	// MAPS OF SERVICES
+	// SERVICES MAPS:
 	// home inbound
 	homeInboundMOCServicesMap := createMOCServicesMap(homeSettlement.Body.Inbound)
 	homeInboundMTCServicesMap := createMTCServicesMap(homeSettlement.Body.Inbound)
@@ -677,6 +677,57 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	partnerInboundMTCServicesMap := createMTCServicesMap(partnerSettlement.Body.Inbound)
 	partnerInboundSmsServicesMap := createSMSServicesMap(partnerSettlement.Body.Inbound)
 	partnerInboundDataServicesMap := createDataServicesMap(partnerSettlement.Body.Inbound)
+
+	// PRECOMMITMENT VALUES BLOCK
+
+	// retrieve shortOfCommitment value for each traffic
+	homeInboundShortOfCommitment := retrieveShortOfCommitment(homeSettlement.Body.Inbound)
+	homeOutboundShortOfCommitment := retrieveShortOfCommitment(homeSettlement.Body.Outbound)
+	partnerInboundShortOfCommitment := retrieveShortOfCommitment(partnerSettlement.Body.Inbound)
+	partnerOutboundShortOfCommitment := retrieveShortOfCommitment(partnerSettlement.Body.Outbound)
+
+	// PRECOMMITMENT VALUES BLOCK - DELTA
+
+	totalNumberOfServices := len(homeInboundMOCServicesMap) + len(homeInboundMTCServicesMap) +
+		len(homeInboundSmsServicesMap) + len(homeInboundDataServicesMap)
+	homeRevenueDelta := calculateDelta(totalNumberOfServices, homeInboundShortOfCommitment)
+
+	totalNumberOfServices = len(partnerInboundMOCServicesMap) + len(partnerInboundMTCServicesMap) +
+		len(partnerInboundSmsServicesMap) + len(partnerInboundDataServicesMap)
+	partnerRevenueDelta := calculateDelta(totalNumberOfServices, partnerInboundShortOfCommitment)
+
+	// PRECOMMITMENT VALUES BLOCK - RECALCULATE TO POSTCOMMITMENT VALUES
+
+	// undercommitment when shortOfCommitment > 0
+	if homeInboundShortOfCommitment > 0 {
+		recalculateDealValues(&homeInboundMOCServicesMap, homeInboundShortOfCommitment)
+		recalculateDealValues(&homeInboundMTCServicesMap, homeInboundShortOfCommitment)
+		recalculateDealValues(&homeInboundSmsServicesMap, homeInboundShortOfCommitment)
+		recalculateDealValues(&homeInboundDataServicesMap, homeInboundShortOfCommitment)
+	}
+
+	if homeOutboundShortOfCommitment > 0 {
+		recalculateDealValues(&homeOutboundMOCServicesMap, homeOutboundShortOfCommitment)
+		recalculateDealValues(&homeOutboundMTCServicesMap, homeOutboundShortOfCommitment)
+		recalculateDealValues(&homeOutboundSmsServicesMap, homeOutboundShortOfCommitment)
+		recalculateDealValues(&homeOutboundDataServicesMap, homeOutboundShortOfCommitment)
+	}
+
+	if partnerInboundShortOfCommitment > 0 {
+		recalculateDealValues(&partnerInboundMOCServicesMap, partnerInboundShortOfCommitment)
+		recalculateDealValues(&partnerInboundMTCServicesMap, partnerInboundShortOfCommitment)
+		recalculateDealValues(&partnerInboundSmsServicesMap, partnerInboundShortOfCommitment)
+		recalculateDealValues(&partnerInboundDataServicesMap, partnerInboundShortOfCommitment)
+	}
+
+	if partnerOutboundShortOfCommitment > 0 {
+		recalculateDealValues(&partnerOutboundMOCServicesMap, partnerOutboundShortOfCommitment)
+		recalculateDealValues(&partnerOutboundMTCServicesMap, partnerOutboundShortOfCommitment)
+		recalculateDealValues(&partnerOutboundSmsServicesMap, partnerOutboundShortOfCommitment)
+		recalculateDealValues(&partnerOutboundDataServicesMap, partnerOutboundShortOfCommitment)
+	}
+
+	// USAGES:
 
 	// HOME PERSPECTIVE
 	// sub-services with usages maps
@@ -700,7 +751,7 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	homeOutboundBearerServiceUsageMap := p.createBearerServicesWithUsagesMap("home", "outbound")
 	homeOutboundBearerServiceUsageMap = mergeMaps(homeOutboundBearerServiceUsageMap, homeOutboundServiceUsageMap)
 
-	// DISCREPANCY REPORT
+	// DISCREPANCY REPORT:
 
 	// HOME PERSPECTIVE
 	// Home Perspective details: home inbound & partner outbound
@@ -780,8 +831,23 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	createGeneralInformation(partnerInboundDataServicesMap, homeOutboundDataServicesMap, "Data", "MB", &partnerPerspectiveGeneralInfo,
 		partnerInboundBearerServiceUsageMap, homeOutboundBearerServiceUsageMap)
 
-	// create final report
+	// SETTLEMENT REPORT:
+
+	// e.g. partnerRevenue = calculateTotalDealValue(partnerInboundMOCServicesMap, partnerInboundMTCServicesMap,
+	// 			partnerInboundSmsServicesMap, partnerInboundDataServicesMap)
+	// 3x
+
+	// create discrepancy report
 	report := SettlementDiscrepancyReport{}
+
+	report.SettlementReport = &(struct {
+		HomeCharges         float64 `json:"homeCharges"`
+		HomeDeltaRevenue    float64 `json:"homeDeltaRevenue"`
+		HomeRevenue         float64 `json:"homeRevenue"`
+		PartnerCharges      float64 `json:"partnerCharges"`
+		PartnerDeltaRevenue float64 `json:"partnerDeltaRevenue"`
+		PartnerRevenue      float64 `json:"partnerRevenue"`
+	}{232.23, 323.32, 544.12, 452.44, homeRevenueDelta, partnerRevenueDelta})
 
 	report.HomePerspective = &(struct {
 		Details            []SettlementDiscrepancyRecord `json:"details"`
@@ -907,13 +973,50 @@ func calculateRelativeDelta64(A, B float64) float64 {
 	return C
 }
 
+func retrieveShortOfCommitment(traffic SettlementServices) float64 {
+	var shortOfCommitment float64
+
+	MOCBackHome := traffic.Services.Voice.MOC.BackHome
+	MOCLocal := traffic.Services.Voice.MOC.Local
+
+	if MOCBackHome != nil && *MOCBackHome.DealValue > 0 {
+		shortOfCommitment = *traffic.Services.Voice.MOC.BackHome.ShortOfCommitment
+
+	} else if MOCLocal != nil && *MOCLocal.DealValue > 0 {
+		shortOfCommitment = *traffic.Services.Voice.MOC.Local.ShortOfCommitment
+
+	} else {
+		for _, element := range traffic.Services.Data {
+			if *element.Value.DealValue > 0 {
+				shortOfCommitment = *element.Value.ShortOfCommitment
+			}
+		}
+	}
+
+	fmt.Printf("Retrieved shortfall: %f\n", shortOfCommitment)
+
+	return shortOfCommitment
+}
+
+func calculateDelta(totalServices int, homeInboundShortOfCommitment float64) float64 {
+	return float64(totalServices) * homeInboundShortOfCommitment
+}
+
+func recalculateDealValues(servicesMap *map[string]float64, ShortOfCommitment float64) {
+	for key, value := range *servicesMap {
+		if value > 0 {
+			(*servicesMap)[key] = value + ShortOfCommitment
+		}
+	}
+}
+
 func createMTCServicesMap(input SettlementServices) map[string]float64 {
 	voiceServicesMap := make(map[string]float64, 0)
 	MTC := input.Services.Voice.MTC
 
 	if MTC != nil {
-		fmt.Printf("MTC: %f\n", *MTC)
-		voiceServicesMap["MTC"] = *MTC
+		fmt.Printf("MTC: %+v\n", *MTC)
+		voiceServicesMap["MTC"] = *MTC.DealValue
 	}
 
 	return voiceServicesMap
@@ -935,44 +1038,44 @@ func createMOCServicesMap(input SettlementServices) map[string]float64 {
 	satellite := input.Services.Voice.MOC.Satellite
 
 	if backHome != nil {
-		fmt.Printf("backHome: %f\n", *backHome)
-		voiceServicesMap["MOC Back Home"] = *backHome
+		fmt.Printf("backHome: %+v\n", *backHome)
+		voiceServicesMap["MOC Back Home"] = *backHome.DealValue
 	}
 	if local != nil {
-		fmt.Printf("local: %f\n", *local)
-		voiceServicesMap["MOC Local"] = *local
+		fmt.Printf("local: %+v\n", *local)
+		voiceServicesMap["MOC Local"] = *local.DealValue
 	}
 	if premium != nil {
-		fmt.Printf("premium: %f\n", *premium)
-		voiceServicesMap["MOC Premium"] = *premium
+		fmt.Printf("premium: %+v\n", *premium)
+		voiceServicesMap["MOC Premium"] = *premium.DealValue
 	}
 	if international != nil {
-		fmt.Printf("international: %f\n", *international)
-		voiceServicesMap["MOC International"] = *international
+		fmt.Printf("international: %+v\n", *international)
+		voiceServicesMap["MOC International"] = *international.DealValue
 	}
 	if ROW != nil {
-		fmt.Printf("ROW: %f\n", *ROW)
-		voiceServicesMap["MOC Row"] = *ROW
+		fmt.Printf("ROW: %+v\n", *ROW)
+		voiceServicesMap["MOC Row"] = *ROW.DealValue
 	}
 
 	if EU != nil {
-		fmt.Printf("EU: %f\n", *EU)
-		voiceServicesMap["MOC EU"] = *EU
+		fmt.Printf("EU: %+v\n", *EU)
+		voiceServicesMap["MOC EU"] = *EU.DealValue
 	}
 
 	if EEA != nil {
-		fmt.Printf("EEA: %f\n", *EEA)
-		voiceServicesMap["MOC EU"] = *EEA
+		fmt.Printf("EEA: %+v\n", *EEA)
+		voiceServicesMap["MOC EU"] = *EEA.DealValue
 	}
 
 	if specialDestinations != nil {
-		fmt.Printf("specialDestinations: %f\n", *specialDestinations)
-		voiceServicesMap["MOC Special Destinations"] = *specialDestinations
+		fmt.Printf("specialDestinations: %+v\n", *specialDestinations)
+		voiceServicesMap["MOC Special Destinations"] = *specialDestinations.DealValue
 	}
 
 	if satellite != nil {
-		fmt.Printf("satellite: %f\n", *satellite)
-		voiceServicesMap["MOC Satellite"] = *satellite
+		fmt.Printf("satellite: %+v\n", *satellite)
+		voiceServicesMap["MOC Satellite"] = *satellite.DealValue
 	}
 
 	return voiceServicesMap
@@ -985,10 +1088,10 @@ func createSMSServicesMap(input SettlementServices) map[string]float64 {
 	smsServicesMap := make(map[string]float64, 0)
 
 	if smsMO != nil {
-		smsServicesMap["SMSMO"] = *smsMO
+		smsServicesMap["SMSMO"] = *smsMO.DealValue
 	}
 	if smsMT != nil {
-		smsServicesMap["SMSMT"] = *smsMT
+		smsServicesMap["SMSMT"] = *smsMT.DealValue
 	}
 
 	return smsServicesMap
@@ -998,7 +1101,7 @@ func createDataServicesMap(input SettlementServices) map[string]float64 {
 	dataServicesMap := make(map[string]float64, 0)
 
 	for _, element := range input.Services.Data {
-		dataServicesMap[*element.Name] = *element.Value
+		dataServicesMap[*element.Name] = *element.Value.DealValue
 	}
 
 	return dataServicesMap
