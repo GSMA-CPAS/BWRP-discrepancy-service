@@ -417,8 +417,8 @@ components:
             - partnerRevenue
             - homeCharges
             - partnerCharges
-            - homeDeltaRevenue
-            - partnerDeltaRevenue
+            - homeDeltaCommitment
+            - partnerDeltaCommitment
           properties:
             homeRevenue:
               type: number
@@ -432,10 +432,10 @@ components:
             partnerCharges:
               type: number
               format: double
-            homeDeltaRevenue:
+            homeDeltaCommitment:
               type: number
               format: double
-            partnerDeltaRevenue:
+            partnerDeltaCommitment:
               type: number
               format: double
         homePerspective:

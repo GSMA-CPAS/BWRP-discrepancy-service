@@ -688,13 +688,13 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 
 	// PRECOMMITMENT VALUES BLOCK - DELTA
 
-	totalNumberOfServices := len(homeInboundMOCServicesMap) + len(homeInboundMTCServicesMap) +
-		len(homeInboundSmsServicesMap) + len(homeInboundDataServicesMap)
-	homeRevenueDelta := calculateDelta(totalNumberOfServices, homeInboundShortOfCommitment)
+	totalNumberOfServices := p.len(homeInboundMOCServicesMap) + p.len(homeInboundMTCServicesMap) +
+		p.len(homeInboundSmsServicesMap) + p.len(homeInboundDataServicesMap)
+	homeDeltaCommitment := calculateDelta(totalNumberOfServices, homeInboundShortOfCommitment)
 
-	totalNumberOfServices = len(partnerInboundMOCServicesMap) + len(partnerInboundMTCServicesMap) +
-		len(partnerInboundSmsServicesMap) + len(partnerInboundDataServicesMap)
-	partnerRevenueDelta := calculateDelta(totalNumberOfServices, partnerInboundShortOfCommitment)
+	totalNumberOfServices = p.len(partnerInboundMOCServicesMap) + p.len(partnerInboundMTCServicesMap) +
+		p.len(partnerInboundSmsServicesMap) + p.len(partnerInboundDataServicesMap)
+	partnerDeltaCommitment := calculateDelta(totalNumberOfServices, partnerInboundShortOfCommitment)
 
 	// PRECOMMITMENT VALUES BLOCK - RECALCULATE TO POSTCOMMITMENT VALUES
 
@@ -777,19 +777,19 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	homePerspectiveGeneralInfo := make([]SettlementDiscrepancyRecord, 0)
 
 	// MOC general information
-	createGeneralInformation(homeInboundMOCServicesMap, partnerOutboundMOCServicesMap, "MOC", "MOC", &homePerspectiveGeneralInfo,
+	homeInboundTotalMOCCalculation, partnerOutboundTotalMOCCalculation := createGeneralInformation(homeInboundMOCServicesMap, partnerOutboundMOCServicesMap, "MOC", "MOC", &homePerspectiveGeneralInfo,
 		homeInboundBearerServiceUsageMap, partnerOutboundBearerServiceUsageMap)
 
 	// MTC general information
-	createGeneralInformation(homeInboundMTCServicesMap, partnerOutboundMTCServicesMap, "MTC", "MTC", &homePerspectiveGeneralInfo,
+	homeInboundTotalMTCCalculation, partnerOutboundTotalMTCCalculation := createGeneralInformation(homeInboundMTCServicesMap, partnerOutboundMTCServicesMap, "MTC", "MTC", &homePerspectiveGeneralInfo,
 		homeInboundBearerServiceUsageMap, partnerOutboundBearerServiceUsageMap)
 
 	// SMS general information
-	createGeneralInformation(homeInboundSmsServicesMap, partnerOutboundSmsServicesMap, "SMS", "SMS", &homePerspectiveGeneralInfo,
+	homeInboundTotalSMSCalculation, partnerOutboundTotalSMSCalculation := createGeneralInformation(homeInboundSmsServicesMap, partnerOutboundSmsServicesMap, "SMS", "SMS", &homePerspectiveGeneralInfo,
 		homeInboundBearerServiceUsageMap, partnerOutboundBearerServiceUsageMap)
 
 	// data general information
-	createGeneralInformation(homeInboundDataServicesMap, partnerOutboundDataServicesMap, "Data", "MB", &homePerspectiveGeneralInfo,
+	homeInboundTotalDataCalculation, partnerOutboundTotalDataCalculation := createGeneralInformation(homeInboundDataServicesMap, partnerOutboundDataServicesMap, "Data", "MB", &homePerspectiveGeneralInfo,
 		homeInboundBearerServiceUsageMap, partnerOutboundBearerServiceUsageMap)
 
 	// PARTNER PERSPECTIVE
@@ -816,38 +816,40 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	partnerPerspectiveGeneralInfo := make([]SettlementDiscrepancyRecord, 0)
 
 	// MOC general information
-	createGeneralInformation(partnerInboundMOCServicesMap, homeOutboundMOCServicesMap, "MOC", "MOC", &partnerPerspectiveGeneralInfo,
+	partnerInboundTotalMOCCalculation, homeOutboundTotalMOCCalculation := createGeneralInformation(partnerInboundMOCServicesMap, homeOutboundMOCServicesMap, "MOC", "MOC", &partnerPerspectiveGeneralInfo,
 		partnerInboundBearerServiceUsageMap, homeOutboundBearerServiceUsageMap)
 
 	// MTC general information
-	createGeneralInformation(partnerInboundMTCServicesMap, homeOutboundMTCServicesMap, "MTC", "MTC", &partnerPerspectiveGeneralInfo,
+	partnerInboundTotalMTCCalculation, homeOutboundTotalMTCCalculation := createGeneralInformation(partnerInboundMTCServicesMap, homeOutboundMTCServicesMap, "MTC", "MTC", &partnerPerspectiveGeneralInfo,
 		partnerInboundBearerServiceUsageMap, homeOutboundBearerServiceUsageMap)
 
 	// SMS general information
-	createGeneralInformation(partnerInboundSmsServicesMap, homeOutboundSmsServicesMap, "SMS", "SMS", &partnerPerspectiveGeneralInfo,
+	partnerInboundTotalSMSCalculation, homeOutboundTotalSMSCalculation := createGeneralInformation(partnerInboundSmsServicesMap, homeOutboundSmsServicesMap, "SMS", "SMS", &partnerPerspectiveGeneralInfo,
 		partnerInboundBearerServiceUsageMap, homeOutboundBearerServiceUsageMap)
 
 	// data general information
-	createGeneralInformation(partnerInboundDataServicesMap, homeOutboundDataServicesMap, "Data", "MB", &partnerPerspectiveGeneralInfo,
+	partnerInboundTotalDataCalculation, homeOutboundTotalDataCalculation := createGeneralInformation(partnerInboundDataServicesMap, homeOutboundDataServicesMap, "Data", "MB", &partnerPerspectiveGeneralInfo,
 		partnerInboundBearerServiceUsageMap, homeOutboundBearerServiceUsageMap)
 
-	// SETTLEMENT REPORT:
+	// SETTLEMENT REPORT CALCULATIONS
 
-	// e.g. partnerRevenue = calculateTotalDealValue(partnerInboundMOCServicesMap, partnerInboundMTCServicesMap,
-	// 			partnerInboundSmsServicesMap, partnerInboundDataServicesMap)
-	// 3x
+	homeRevenue := homeInboundTotalMOCCalculation + homeInboundTotalMTCCalculation + homeInboundTotalSMSCalculation + homeInboundTotalDataCalculation
+	partnerCharges := partnerOutboundTotalMOCCalculation + partnerOutboundTotalMTCCalculation + partnerOutboundTotalSMSCalculation + partnerOutboundTotalDataCalculation
+
+	partnerRevenue := partnerInboundTotalMOCCalculation + partnerInboundTotalMTCCalculation + partnerInboundTotalSMSCalculation + partnerInboundTotalDataCalculation
+	homeCharges := homeOutboundTotalMOCCalculation + homeOutboundTotalMTCCalculation + homeOutboundTotalSMSCalculation + homeOutboundTotalDataCalculation
 
 	// create discrepancy report
 	report := SettlementDiscrepancyReport{}
 
 	report.SettlementReport = &(struct {
-		HomeCharges         float64 `json:"homeCharges"`
-		HomeDeltaRevenue    float64 `json:"homeDeltaRevenue"`
-		HomeRevenue         float64 `json:"homeRevenue"`
-		PartnerCharges      float64 `json:"partnerCharges"`
-		PartnerDeltaRevenue float64 `json:"partnerDeltaRevenue"`
-		PartnerRevenue      float64 `json:"partnerRevenue"`
-	}{232.23, 323.32, 544.12, 452.44, homeRevenueDelta, partnerRevenueDelta})
+		HomeCharges            float64 `json:"homeCharges"`
+		HomeDeltaCommitment    float64 `json:"homeDeltaCommitment"`
+		HomeRevenue            float64 `json:"homeRevenue"`
+		PartnerCharges         float64 `json:"partnerCharges"`
+		PartnerDeltaCommitment float64 `json:"partnerDeltaCommitment"`
+		PartnerRevenue         float64 `json:"partnerRevenue"`
+	}{homeCharges, homeDeltaCommitment, homeRevenue, partnerCharges, partnerDeltaCommitment, partnerRevenue})
 
 	report.HomePerspective = &(struct {
 		Details            []SettlementDiscrepancyRecord `json:"details"`
@@ -925,7 +927,7 @@ func createSubServicesDetails(ownMap, partnerMap map[string]float64, units strin
 }
 
 func createGeneralInformation(ownMap, partnerMap map[string]float64, service, units string, generalInfoArr *[]SettlementDiscrepancyRecord,
-	ownUsageMap, partnerUsageMap map[string]float64) {
+	ownUsageMap, partnerUsageMap map[string]float64) (float64, float64) {
 
 	// perform aggregations
 	ownCalculationTotalAmount := float64(0)
@@ -955,6 +957,20 @@ func createGeneralInformation(ownMap, partnerMap map[string]float64, service, un
 	discrepancyRecord.PartnerCalculation = partnerCalculationTotalAmount
 	discrepancyRecord.DeltaCalculationPercent = calculateRelativeDelta64(ownCalculationTotalAmount, partnerCalculationTotalAmount)
 	*generalInfoArr = append(*generalInfoArr, discrepancyRecord)
+
+	return ownCalculationTotalAmount, partnerCalculationTotalAmount
+}
+
+func (p *DiscrepancyServer) len(serviceMap map[string]float64) int {
+	counter := 0
+
+	for _, serviceCalculation := range serviceMap {
+		if serviceCalculation > 0 {
+			counter++
+		}
+	}
+
+	return counter
 }
 
 func calculateRelativeDelta64(A, B float64) float64 {

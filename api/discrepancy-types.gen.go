@@ -96,12 +96,12 @@ type SettlementDiscrepancyReport struct {
 		GeneralInformation []SettlementDiscrepancyRecord `json:"general_information"`
 	} `json:"partnerPerspective,omitempty"`
 	SettlementReport *struct {
-		HomeCharges         float64 `json:"homeCharges"`
-		HomeDeltaRevenue    float64 `json:"homeDeltaRevenue"`
-		HomeRevenue         float64 `json:"homeRevenue"`
-		PartnerCharges      float64 `json:"partnerCharges"`
-		PartnerDeltaRevenue float64 `json:"partnerDeltaRevenue"`
-		PartnerRevenue      float64 `json:"partnerRevenue"`
+		HomeCharges            float64 `json:"homeCharges"`
+		HomeDeltaCommitment    float64 `json:"homeDeltaCommitment"`
+		HomeRevenue            float64 `json:"homeRevenue"`
+		PartnerCharges         float64 `json:"partnerCharges"`
+		PartnerDeltaCommitment float64 `json:"partnerDeltaCommitment"`
+		PartnerRevenue         float64 `json:"partnerRevenue"`
 	} `json:"settlementReport,omitempty"`
 }
 
