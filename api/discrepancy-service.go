@@ -680,52 +680,42 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 
 	// PRECOMMITMENT VALUES BLOCK
 
-	// retrieve shortOfCommitment value for each traffic
-	homeInboundShortOfCommitment := retrieveShortOfCommitment(homeSettlement.Body.Inbound)
-	homeOutboundShortOfCommitment := retrieveShortOfCommitment(homeSettlement.Body.Outbound)
-	partnerInboundShortOfCommitment := retrieveShortOfCommitment(partnerSettlement.Body.Inbound)
-	partnerOutboundShortOfCommitment := retrieveShortOfCommitment(partnerSettlement.Body.Outbound)
-
 	// PRECOMMITMENT VALUES BLOCK - DELTA
+	homeMOCDeltaCommitment := calculateDelta(homeInboundMOCServicesMap)
+	homeMTCDeltaCommitment := calculateDelta(homeInboundMTCServicesMap)
+	homeSMSDeltaCommitment := calculateDelta(homeInboundSmsServicesMap)
+	homeDataDeltaCommitment := calculateDelta(homeInboundDataServicesMap)
 
-	totalNumberOfServices := p.len(homeInboundMOCServicesMap) + p.len(homeInboundMTCServicesMap) +
-		p.len(homeInboundSmsServicesMap) + p.len(homeInboundDataServicesMap)
-	homeDeltaCommitment := calculateDelta(totalNumberOfServices, homeInboundShortOfCommitment)
+	homeDeltaCommitment := homeMOCDeltaCommitment + homeMTCDeltaCommitment + homeSMSDeltaCommitment + homeDataDeltaCommitment
 
-	totalNumberOfServices = p.len(partnerInboundMOCServicesMap) + p.len(partnerInboundMTCServicesMap) +
-		p.len(partnerInboundSmsServicesMap) + p.len(partnerInboundDataServicesMap)
-	partnerDeltaCommitment := calculateDelta(totalNumberOfServices, partnerInboundShortOfCommitment)
+	partnerMOCDeltaCommitment := calculateDelta(partnerInboundMOCServicesMap)
+	partnerMTCDeltaCommitment := calculateDelta(partnerInboundMTCServicesMap)
+	partnerSMSDeltaCommitment := calculateDelta(partnerInboundSmsServicesMap)
+	partnerDataDeltaCommitment := calculateDelta(partnerInboundDataServicesMap)
+
+	partnerDeltaCommitment := partnerMOCDeltaCommitment + partnerMTCDeltaCommitment + partnerSMSDeltaCommitment + partnerDataDeltaCommitment
 
 	// PRECOMMITMENT VALUES BLOCK - RECALCULATE TO POSTCOMMITMENT VALUES
 
-	// undercommitment when shortOfCommitment > 0
-	if homeInboundShortOfCommitment > 0 {
-		recalculateDealValues(&homeInboundMOCServicesMap, homeInboundShortOfCommitment)
-		recalculateDealValues(&homeInboundMTCServicesMap, homeInboundShortOfCommitment)
-		recalculateDealValues(&homeInboundSmsServicesMap, homeInboundShortOfCommitment)
-		recalculateDealValues(&homeInboundDataServicesMap, homeInboundShortOfCommitment)
-	}
+	recalculateDealValues(&homeInboundMOCServicesMap)
+	recalculateDealValues(&homeInboundMTCServicesMap)
+	recalculateDealValues(&homeInboundSmsServicesMap)
+	recalculateDealValues(&homeInboundDataServicesMap)
 
-	if homeOutboundShortOfCommitment > 0 {
-		recalculateDealValues(&homeOutboundMOCServicesMap, homeOutboundShortOfCommitment)
-		recalculateDealValues(&homeOutboundMTCServicesMap, homeOutboundShortOfCommitment)
-		recalculateDealValues(&homeOutboundSmsServicesMap, homeOutboundShortOfCommitment)
-		recalculateDealValues(&homeOutboundDataServicesMap, homeOutboundShortOfCommitment)
-	}
+	recalculateDealValues(&homeOutboundMOCServicesMap)
+	recalculateDealValues(&homeOutboundMTCServicesMap)
+	recalculateDealValues(&homeOutboundSmsServicesMap)
+	recalculateDealValues(&homeOutboundDataServicesMap)
 
-	if partnerInboundShortOfCommitment > 0 {
-		recalculateDealValues(&partnerInboundMOCServicesMap, partnerInboundShortOfCommitment)
-		recalculateDealValues(&partnerInboundMTCServicesMap, partnerInboundShortOfCommitment)
-		recalculateDealValues(&partnerInboundSmsServicesMap, partnerInboundShortOfCommitment)
-		recalculateDealValues(&partnerInboundDataServicesMap, partnerInboundShortOfCommitment)
-	}
+	recalculateDealValues(&partnerInboundMOCServicesMap)
+	recalculateDealValues(&partnerInboundMTCServicesMap)
+	recalculateDealValues(&partnerInboundSmsServicesMap)
+	recalculateDealValues(&partnerInboundDataServicesMap)
 
-	if partnerOutboundShortOfCommitment > 0 {
-		recalculateDealValues(&partnerOutboundMOCServicesMap, partnerOutboundShortOfCommitment)
-		recalculateDealValues(&partnerOutboundMTCServicesMap, partnerOutboundShortOfCommitment)
-		recalculateDealValues(&partnerOutboundSmsServicesMap, partnerOutboundShortOfCommitment)
-		recalculateDealValues(&partnerOutboundDataServicesMap, partnerOutboundShortOfCommitment)
-	}
+	recalculateDealValues(&partnerOutboundMOCServicesMap)
+	recalculateDealValues(&partnerOutboundMTCServicesMap)
+	recalculateDealValues(&partnerOutboundSmsServicesMap)
+	recalculateDealValues(&partnerOutboundDataServicesMap)
 
 	// USAGES:
 
@@ -864,15 +854,15 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	return ctx.JSON(http.StatusOK, report)
 }
 
-func createSubServicesDetails(ownMap, partnerMap map[string]float64, units string, details *[]SettlementDiscrepancyRecord,
+func createSubServicesDetails(ownMap, partnerMap map[string]TelcoService, units string, details *[]SettlementDiscrepancyRecord,
 	ownUsageMap, partnerUsageMap map[string]float64) {
 
 	fmt.Println("createSubServicesDetails")
 
-	for key, ownCalculation := range ownMap {
-		partnerCalculation := partnerMap[key]
+	for key, ownTelcoService := range ownMap {
+		partnerTelcoService := partnerMap[key]
 
-		if !(ownCalculation == 0 && partnerCalculation == 0) {
+		if !(*ownTelcoService.DealValue == 0 && *partnerTelcoService.DealValue == 0) {
 			var discrepancyRecord = SettlementDiscrepancyRecord{}
 			discrepancyRecord.Service = key
 			discrepancyRecord.Unit = units
@@ -886,12 +876,12 @@ func createSubServicesDetails(ownMap, partnerMap map[string]float64, units strin
 			////
 			fmt.Printf("DeltaUsageAbs : %f DeltaUsagePercent %f\n", discrepancyRecord.DeltaUsageAbs, discrepancyRecord.DeltaUsagePercent)
 			///
-			discrepancyRecord.OwnCalculation = ownCalculation
-			discrepancyRecord.PartnerCalculation = partnerCalculation
+			discrepancyRecord.OwnCalculation = *ownTelcoService.DealValue
+			discrepancyRecord.PartnerCalculation = *partnerTelcoService.DealValue
 			////
 			fmt.Printf("Own calculation : %f partner calculation %f\n", discrepancyRecord.OwnCalculation, discrepancyRecord.PartnerCalculation)
 			////
-			discrepancyRecord.DeltaCalculationPercent = calculateRelativeDelta64(ownCalculation, partnerCalculation)
+			discrepancyRecord.DeltaCalculationPercent = calculateRelativeDelta64(*ownTelcoService.DealValue, *partnerTelcoService.DealValue)
 			////
 			fmt.Printf("DeltaCalculationPercent %f\n", discrepancyRecord.DeltaCalculationPercent)
 			////
@@ -926,17 +916,17 @@ func createSubServicesDetails(ownMap, partnerMap map[string]float64, units strin
 	}
 }
 
-func createGeneralInformation(ownMap, partnerMap map[string]float64, service, units string, generalInfoArr *[]SettlementDiscrepancyRecord,
+func createGeneralInformation(ownMap, partnerMap map[string]TelcoService, service, units string, generalInfoArr *[]SettlementDiscrepancyRecord,
 	ownUsageMap, partnerUsageMap map[string]float64) (float64, float64) {
 
 	// perform aggregations
 	ownCalculationTotalAmount := float64(0)
-	for _, value := range ownMap {
-		ownCalculationTotalAmount += value
+	for _, telcoService := range ownMap {
+		ownCalculationTotalAmount += *telcoService.DealValue
 	}
 	partnerCalculationTotalAmount := float64(0)
-	for _, value := range partnerMap {
-		partnerCalculationTotalAmount += value
+	for _, telcoService := range partnerMap {
+		partnerCalculationTotalAmount += *telcoService.DealValue
 	}
 	discrepancyRecord := SettlementDiscrepancyRecord{}
 	discrepancyRecord.Service = service
@@ -961,18 +951,6 @@ func createGeneralInformation(ownMap, partnerMap map[string]float64, service, un
 	return ownCalculationTotalAmount, partnerCalculationTotalAmount
 }
 
-func (p *DiscrepancyServer) len(servicesMap map[string]float64) int {
-	counter := 0
-
-	for _, serviceCalculation := range servicesMap {
-		if serviceCalculation > 0 {
-			counter++
-		}
-	}
-
-	return counter
-}
-
 func calculateRelativeDelta64(A, B float64) float64 {
 	// relative delta
 	zero := float64(0)
@@ -989,59 +967,53 @@ func calculateRelativeDelta64(A, B float64) float64 {
 	return C
 }
 
-func retrieveShortOfCommitment(traffic SettlementServices) float64 {
-	var shortOfCommitment float64
+func calculateDelta(services map[string]TelcoService) float64 {
+	delta := 0.0
 
-	MOCBackHome := traffic.Services.Voice.MOC.BackHome
-	MOCLocal := traffic.Services.Voice.MOC.Local
-
-	if MOCBackHome != nil && *MOCBackHome.DealValue > 0 {
-		shortOfCommitment = *traffic.Services.Voice.MOC.BackHome.ShortOfCommitment
-
-	} else if MOCLocal != nil && *MOCLocal.DealValue > 0 {
-		shortOfCommitment = *traffic.Services.Voice.MOC.Local.ShortOfCommitment
-
-	} else {
-		for _, element := range traffic.Services.Data {
-			if *element.Value.DealValue > 0 {
-				shortOfCommitment = *element.Value.ShortOfCommitment
-			}
-		}
+	for _, telcoService := range services {
+		delta = delta + *telcoService.ShortOfCommitment
 	}
 
-	fmt.Printf("Retrieved shortfall: %f\n", shortOfCommitment)
-
-	return shortOfCommitment
+	return delta
 }
 
-func calculateDelta(totalServices int, homeInboundShortOfCommitment float64) float64 {
-	return float64(totalServices) * homeInboundShortOfCommitment
-}
+func recalculateDealValues(servicesMap *map[string]TelcoService) {
 
-func recalculateDealValues(servicesMap *map[string]float64, ShortOfCommitment float64) {
-	for key, serviceCalculation := range *servicesMap {
-		if serviceCalculation > 0 {
-			(*servicesMap)[key] = serviceCalculation + ShortOfCommitment
+	if len(*servicesMap) == 0 {
+		return
+	}
+
+	for _, telcoService := range *servicesMap {
+
+		shortOfCommitment := *telcoService.ShortOfCommitment
+		if shortOfCommitment <= 0 {
+			break
+		}
+
+		dealValue := *telcoService.DealValue
+		if dealValue >= 0 {
+			*telcoService.DealValue = dealValue + shortOfCommitment
 		}
 	}
+	return
 }
 
-func createMTCServicesMap(input SettlementServices) map[string]float64 {
-	voiceServicesMap := make(map[string]float64, 0)
+func createMTCServicesMap(input SettlementServices) map[string]TelcoService {
+	voiceServicesMap := make(map[string]TelcoService, 0)
 	MTC := input.Services.Voice.MTC
 
 	if MTC != nil {
 		fmt.Printf("MTC: %+v\n", *MTC)
-		voiceServicesMap["MTC"] = *MTC.DealValue
+		voiceServicesMap["MTC"] = *MTC
 	}
 
 	return voiceServicesMap
 }
 
-func createMOCServicesMap(input SettlementServices) map[string]float64 {
+func createMOCServicesMap(input SettlementServices) map[string]TelcoService {
 	fmt.Println("MOC services values:")
 
-	voiceServicesMap := make(map[string]float64, 0)
+	voiceServicesMap := make(map[string]TelcoService, 0)
 
 	backHome := input.Services.Voice.MOC.BackHome
 	local := input.Services.Voice.MOC.Local
@@ -1055,69 +1027,69 @@ func createMOCServicesMap(input SettlementServices) map[string]float64 {
 
 	if backHome != nil {
 		fmt.Printf("backHome: %+v\n", *backHome)
-		voiceServicesMap["MOC Back Home"] = *backHome.DealValue
+		voiceServicesMap["MOC Back Home"] = *backHome
 	}
 	if local != nil {
 		fmt.Printf("local: %+v\n", *local)
-		voiceServicesMap["MOC Local"] = *local.DealValue
+		voiceServicesMap["MOC Local"] = *local
 	}
 	if premium != nil {
 		fmt.Printf("premium: %+v\n", *premium)
-		voiceServicesMap["MOC Premium"] = *premium.DealValue
+		voiceServicesMap["MOC Premium"] = *premium
 	}
 	if international != nil {
 		fmt.Printf("international: %+v\n", *international)
-		voiceServicesMap["MOC International"] = *international.DealValue
+		voiceServicesMap["MOC International"] = *international
 	}
 	if ROW != nil {
 		fmt.Printf("ROW: %+v\n", *ROW)
-		voiceServicesMap["MOC Row"] = *ROW.DealValue
+		voiceServicesMap["MOC Row"] = *ROW
 	}
 
 	if EU != nil {
 		fmt.Printf("EU: %+v\n", *EU)
-		voiceServicesMap["MOC EU"] = *EU.DealValue
+		voiceServicesMap["MOC EU"] = *EU
 	}
 
 	if EEA != nil {
 		fmt.Printf("EEA: %+v\n", *EEA)
-		voiceServicesMap["MOC EU"] = *EEA.DealValue
+		voiceServicesMap["MOC EU"] = *EEA
 	}
 
 	if specialDestinations != nil {
 		fmt.Printf("specialDestinations: %+v\n", *specialDestinations)
-		voiceServicesMap["MOC Special Destinations"] = *specialDestinations.DealValue
+		voiceServicesMap["MOC Special Destinations"] = *specialDestinations
 	}
 
 	if satellite != nil {
 		fmt.Printf("satellite: %+v\n", *satellite)
-		voiceServicesMap["MOC Satellite"] = *satellite.DealValue
+		voiceServicesMap["MOC Satellite"] = *satellite
 	}
 
 	return voiceServicesMap
 }
 
-func createSMSServicesMap(input SettlementServices) map[string]float64 {
+func createSMSServicesMap(input SettlementServices) map[string]TelcoService {
 	smsMO := input.Services.SMS.MO
 	smsMT := input.Services.SMS.MT
 
-	smsServicesMap := make(map[string]float64, 0)
+	smsServicesMap := make(map[string]TelcoService, 0)
 
 	if smsMO != nil {
-		smsServicesMap["SMSMO"] = *smsMO.DealValue
+		smsServicesMap["SMSMO"] = *smsMO
 	}
 	if smsMT != nil {
-		smsServicesMap["SMSMT"] = *smsMT.DealValue
+		smsServicesMap["SMSMT"] = *smsMT
 	}
 
 	return smsServicesMap
 }
 
-func createDataServicesMap(input SettlementServices) map[string]float64 {
-	dataServicesMap := make(map[string]float64, 0)
+func createDataServicesMap(input SettlementServices) map[string]TelcoService {
+	dataServicesMap := make(map[string]TelcoService, 0)
 
 	for _, element := range input.Services.Data {
-		dataServicesMap[*element.Name] = *element.Value.DealValue
+		dataServicesMap[*element.Name] = *element.Value
 	}
 
 	return dataServicesMap
