@@ -961,10 +961,10 @@ func createGeneralInformation(ownMap, partnerMap map[string]float64, service, un
 	return ownCalculationTotalAmount, partnerCalculationTotalAmount
 }
 
-func (p *DiscrepancyServer) len(serviceMap map[string]float64) int {
+func (p *DiscrepancyServer) len(servicesMap map[string]float64) int {
 	counter := 0
 
-	for _, serviceCalculation := range serviceMap {
+	for _, serviceCalculation := range servicesMap {
 		if serviceCalculation > 0 {
 			counter++
 		}
@@ -1019,9 +1019,9 @@ func calculateDelta(totalServices int, homeInboundShortOfCommitment float64) flo
 }
 
 func recalculateDealValues(servicesMap *map[string]float64, ShortOfCommitment float64) {
-	for key, value := range *servicesMap {
-		if value > 0 {
-			(*servicesMap)[key] = value + ShortOfCommitment
+	for key, serviceCalculation := range *servicesMap {
+		if serviceCalculation > 0 {
+			(*servicesMap)[key] = serviceCalculation + ShortOfCommitment
 		}
 	}
 }
