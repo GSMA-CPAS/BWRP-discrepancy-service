@@ -688,6 +688,11 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 
 	homeDeltaCommitment := homeMOCDeltaCommitment + homeMTCDeltaCommitment + homeSMSDeltaCommitment + homeDataDeltaCommitment
 
+	fmt.Printf("homeMOCDeltaCommitment : %f \n", homeMOCDeltaCommitment)
+	fmt.Printf("homeMTCDeltaCommitment : %f \n", homeMTCDeltaCommitment)
+	fmt.Printf("homeSMSDeltaCommitment : %f \n", homeSMSDeltaCommitment)
+	fmt.Printf("homeDataDeltaCommitment : %f \n", homeDataDeltaCommitment)
+
 	partnerMOCDeltaCommitment := calculateDelta(partnerInboundMOCServicesMap)
 	partnerMTCDeltaCommitment := calculateDelta(partnerInboundMTCServicesMap)
 	partnerSMSDeltaCommitment := calculateDelta(partnerInboundSmsServicesMap)
@@ -1024,6 +1029,7 @@ func createMOCServicesMap(input SettlementServices) map[string]TelcoService {
 	EU := input.Services.Voice.MOC.EU
 	EEA := input.Services.Voice.MOC.EEA
 	satellite := input.Services.Voice.MOC.Satellite
+	videoTelephony := input.Services.Voice.MOC.VideoTelephony
 
 	if backHome != nil {
 		fmt.Printf("backHome: %+v\n", *backHome)
@@ -1053,7 +1059,7 @@ func createMOCServicesMap(input SettlementServices) map[string]TelcoService {
 
 	if EEA != nil {
 		fmt.Printf("EEA: %+v\n", *EEA)
-		voiceServicesMap["MOC EU"] = *EEA
+		voiceServicesMap["MOC EEA"] = *EEA
 	}
 
 	if specialDestinations != nil {
@@ -1064,6 +1070,11 @@ func createMOCServicesMap(input SettlementServices) map[string]TelcoService {
 	if satellite != nil {
 		fmt.Printf("satellite: %+v\n", *satellite)
 		voiceServicesMap["MOC Satellite"] = *satellite
+	}
+
+	if videoTelephony != nil {
+		fmt.Printf("videoTelephony: %+v\n", *videoTelephony)
+		voiceServicesMap["MOC videoTelephony"] = *videoTelephony
 	}
 
 	return voiceServicesMap

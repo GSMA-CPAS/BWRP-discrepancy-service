@@ -406,6 +406,9 @@ components:
         satellite:
           type: object
           $ref: '#/components/schemas/TelcoService'
+        videoTelephony:
+          type: object
+          $ref: '#/components/schemas/TelcoService'
     
     SettlementDiscrepancyReport:
       type: object

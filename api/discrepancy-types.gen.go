@@ -42,6 +42,7 @@ type MOC struct {
 	Premium             *TelcoService `json:"premium,omitempty"`
 	Satellite           *TelcoService `json:"satellite,omitempty"`
 	SpecialDestinations *TelcoService `json:"specialDestinations,omitempty"`
+	VideoTelephony      *TelcoService `json:"videoTelephony,omitempty"`
 }
 
 // Settlement defines model for Settlement.
