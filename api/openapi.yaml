@@ -365,6 +365,9 @@ components:
     
     TelcoService:
       type: object
+      required:
+          - dealValue
+          - shortOfCommitment
       properties:
         dealValue:
           type: number

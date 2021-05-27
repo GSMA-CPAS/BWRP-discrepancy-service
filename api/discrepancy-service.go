@@ -652,6 +652,12 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	homeSettlement := req[0] // assumption: first settlement is a home one
 	partnerSettlement := req[1]
 
+	// prettyJSON, err := json.MarshalIndent(homeSettlement, "", "    ")
+	// if err != nil {
+	// 	log.Fatal("Failed to generate json", err)
+	// }
+	// fmt.Printf("%s\n", string(prettyJSON))
+
 	fmt.Println(homeSettlement.Header.Context)
 	fmt.Println(partnerSettlement.Header.Context)
 
@@ -867,7 +873,7 @@ func createSubServicesDetails(ownMap, partnerMap map[string]TelcoService, units 
 	for key, ownTelcoService := range ownMap {
 		partnerTelcoService := partnerMap[key]
 
-		if !(*ownTelcoService.DealValue == 0 && *partnerTelcoService.DealValue == 0) {
+		if !(ownTelcoService.DealValue == 0 && partnerTelcoService.DealValue == 0) {
 			var discrepancyRecord = SettlementDiscrepancyRecord{}
 			discrepancyRecord.Service = key
 			discrepancyRecord.Unit = units
@@ -881,12 +887,12 @@ func createSubServicesDetails(ownMap, partnerMap map[string]TelcoService, units 
 			////
 			fmt.Printf("DeltaUsageAbs : %f DeltaUsagePercent %f\n", discrepancyRecord.DeltaUsageAbs, discrepancyRecord.DeltaUsagePercent)
 			///
-			discrepancyRecord.OwnCalculation = *ownTelcoService.DealValue
-			discrepancyRecord.PartnerCalculation = *partnerTelcoService.DealValue
+			discrepancyRecord.OwnCalculation = ownTelcoService.DealValue
+			discrepancyRecord.PartnerCalculation = partnerTelcoService.DealValue
 			////
 			fmt.Printf("Own calculation : %f partner calculation %f\n", discrepancyRecord.OwnCalculation, discrepancyRecord.PartnerCalculation)
 			////
-			discrepancyRecord.DeltaCalculationPercent = calculateRelativeDelta64(*ownTelcoService.DealValue, *partnerTelcoService.DealValue)
+			discrepancyRecord.DeltaCalculationPercent = calculateRelativeDelta64(ownTelcoService.DealValue, partnerTelcoService.DealValue)
 			////
 			fmt.Printf("DeltaCalculationPercent %f\n", discrepancyRecord.DeltaCalculationPercent)
 			////
@@ -927,11 +933,11 @@ func createGeneralInformation(ownMap, partnerMap map[string]TelcoService, servic
 	// perform aggregations
 	ownCalculationTotalAmount := float64(0)
 	for _, telcoService := range ownMap {
-		ownCalculationTotalAmount += *telcoService.DealValue
+		ownCalculationTotalAmount += telcoService.DealValue
 	}
 	partnerCalculationTotalAmount := float64(0)
 	for _, telcoService := range partnerMap {
-		partnerCalculationTotalAmount += *telcoService.DealValue
+		partnerCalculationTotalAmount += telcoService.DealValue
 	}
 	discrepancyRecord := SettlementDiscrepancyRecord{}
 	discrepancyRecord.Service = service
@@ -976,7 +982,7 @@ func calculateDelta(services map[string]TelcoService) float64 {
 	delta := 0.0
 
 	for _, telcoService := range services {
-		delta = delta + *telcoService.ShortOfCommitment
+		delta = delta + telcoService.ShortOfCommitment
 	}
 
 	return delta
@@ -990,14 +996,14 @@ func recalculateDealValues(servicesMap *map[string]TelcoService) {
 
 	for _, telcoService := range *servicesMap {
 
-		shortOfCommitment := *telcoService.ShortOfCommitment
+		shortOfCommitment := telcoService.ShortOfCommitment
 		if shortOfCommitment <= 0 {
 			break
 		}
 
-		dealValue := *telcoService.DealValue
-		if dealValue >= 0 {
-			*telcoService.DealValue = dealValue + shortOfCommitment
+		dealValue := telcoService.DealValue
+		if dealValue > 0 {
+			telcoService.DealValue = dealValue + shortOfCommitment
 		}
 	}
 	return
