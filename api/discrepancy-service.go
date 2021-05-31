@@ -519,13 +519,11 @@ func (p *DiscrepancyServer) createSubServicesWithUsagesMap(perspective, directio
 		}
 	}
 
-	fmt.Println(serviceUsages)
-
 	servicesMap := make(map[string]float64, len(serviceUsages))
 
 	for _, element := range serviceUsages {
-		fmt.Println(element.ID)
-		fmt.Println(element.Total)
+		// fmt.Println(element.ID)
+		// fmt.Println(element.Total)
 		servicesMap[element.ID] = element.Total
 	}
 
@@ -600,8 +598,6 @@ func (p *DiscrepancyServer) createBearerServicesWithUsagesMap(perspective, direc
 		fmt.Println(element.Total)
 		servicesMap[element.ID] = element.Total
 	}
-
-	fmt.Println(servicesMap)
 
 	defer client.Disconnect(dbCtx)
 
@@ -694,10 +690,10 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 
 	homeDeltaCommitment := homeMOCDeltaCommitment + homeMTCDeltaCommitment + homeSMSDeltaCommitment + homeDataDeltaCommitment
 
-	fmt.Printf("homeMOCDeltaCommitment : %f \n", homeMOCDeltaCommitment)
-	fmt.Printf("homeMTCDeltaCommitment : %f \n", homeMTCDeltaCommitment)
-	fmt.Printf("homeSMSDeltaCommitment : %f \n", homeSMSDeltaCommitment)
-	fmt.Printf("homeDataDeltaCommitment : %f \n", homeDataDeltaCommitment)
+	// fmt.Printf("homeMOCDeltaCommitment : %f \n", homeMOCDeltaCommitment)
+	// fmt.Printf("homeMTCDeltaCommitment : %f \n", homeMTCDeltaCommitment)
+	// fmt.Printf("homeSMSDeltaCommitment : %f \n", homeSMSDeltaCommitment)
+	// fmt.Printf("homeDataDeltaCommitment : %f \n", homeDataDeltaCommitment)
 
 	partnerMOCDeltaCommitment := calculateDelta(partnerInboundMOCServicesMap)
 	partnerMTCDeltaCommitment := calculateDelta(partnerInboundMTCServicesMap)
