@@ -366,6 +366,7 @@ components:
       required:
           - dealValue
           - shortOfCommitment
+          - usage
       properties:
         dealValue:
           type: number
