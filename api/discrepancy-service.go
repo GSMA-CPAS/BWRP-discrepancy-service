@@ -41,10 +41,10 @@ type ServiceUsage struct {
 }
 
 type DiscrepancyServer struct {
-	NextId     int64
-	Lock       sync.Mutex
-	config     Configuration
-	credential options.Credential
+	NextId      int64
+	Lock        sync.Mutex
+	config      Configuration
+	credentials options.Credential
 }
 
 func NewDiscrepancyServer() *DiscrepancyServer {
@@ -61,13 +61,14 @@ func NewDiscrepancyServer() *DiscrepancyServer {
 	fmt.Printf("DB password: %s\n", config.Database.Password)
 
 	dbAccessCredentials := options.Credential{
+		// AuthMechanism: "SCRAM-SHA-1",
 		Username: config.Database.Username,
 		Password: config.Database.Password,
 	}
 
 	return &DiscrepancyServer{
-		config:     config,
-		credential: dbAccessCredentials,
+		config:      config,
+		credentials: dbAccessCredentials,
 	}
 }
 
@@ -328,7 +329,7 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 
 func (p *DiscrepancyServer) saveUsageReportsToLocalDB(home, partner Usage) {
 
-	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Server.Connection_String).SetAuth(p.credential))
+	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Server.Connection_String).SetAuth(p.credentials))
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -469,7 +470,7 @@ func (p *DiscrepancyServer) createSubServicesWithUsagesMap(perspective, directio
 	fmt.Println(perspective)
 	fmt.Println(direction)
 
-	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Server.Connection_String).SetAuth(p.credential))
+	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Server.Connection_String).SetAuth(p.credentials))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -539,7 +540,7 @@ func (p *DiscrepancyServer) createBearerServicesWithUsagesMap(perspective, direc
 	fmt.Println(perspective)
 	fmt.Println(direction)
 
-	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Server.Connection_String).SetAuth(p.credential))
+	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Server.Connection_String).SetAuth(p.credentials))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -648,14 +649,15 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	homeSettlement := req[0] // assumption: first settlement is a home one
 	partnerSettlement := req[1]
 
-	// prettyJSON, err := json.MarshalIndent(homeSettlement, "", "    ")
-	// if err != nil {
-	// 	log.Fatal("Failed to generate json", err)
-	// }
-	// fmt.Printf("%s\n", string(prettyJSON))
+	// print home settlement
+	prettyJSON, err := json.MarshalIndent(homeSettlement, "", "    ")
+	if err != nil {
+		log.Fatal("Failed to generate json", err)
+	}
+	fmt.Printf("%s\n", string(prettyJSON))
 
-	fmt.Println(homeSettlement.Header.Context)
-	fmt.Println(partnerSettlement.Header.Context)
+	// fmt.Println(homeSettlement.Header.Context)
+	// fmt.Println(partnerSettlement.Header.Context)
 
 	// SERVICES MAPS:
 	// home inbound
@@ -704,25 +706,30 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 
 	// PRECOMMITMENT VALUES BLOCK - RECALCULATE TO POSTCOMMITMENT VALUES
 
-	recalculateDealValues(&homeInboundMOCServicesMap)
-	recalculateDealValues(&homeInboundMTCServicesMap)
-	recalculateDealValues(&homeInboundSmsServicesMap)
-	recalculateDealValues(&homeInboundDataServicesMap)
+	printTelcoServicesMap(homeInboundMOCServicesMap)
+	////
+	recalculateDealValues(homeInboundMOCServicesMap)
+	////
+	printTelcoServicesMap(homeInboundMOCServicesMap)
 
-	recalculateDealValues(&homeOutboundMOCServicesMap)
-	recalculateDealValues(&homeOutboundMTCServicesMap)
-	recalculateDealValues(&homeOutboundSmsServicesMap)
-	recalculateDealValues(&homeOutboundDataServicesMap)
+	recalculateDealValues(homeInboundMTCServicesMap)
+	recalculateDealValues(homeInboundSmsServicesMap)
+	recalculateDealValues(homeInboundDataServicesMap)
 
-	recalculateDealValues(&partnerInboundMOCServicesMap)
-	recalculateDealValues(&partnerInboundMTCServicesMap)
-	recalculateDealValues(&partnerInboundSmsServicesMap)
-	recalculateDealValues(&partnerInboundDataServicesMap)
+	recalculateDealValues(homeOutboundMOCServicesMap)
+	recalculateDealValues(homeOutboundMTCServicesMap)
+	recalculateDealValues(homeOutboundSmsServicesMap)
+	recalculateDealValues(homeOutboundDataServicesMap)
 
-	recalculateDealValues(&partnerOutboundMOCServicesMap)
-	recalculateDealValues(&partnerOutboundMTCServicesMap)
-	recalculateDealValues(&partnerOutboundSmsServicesMap)
-	recalculateDealValues(&partnerOutboundDataServicesMap)
+	recalculateDealValues(partnerInboundMOCServicesMap)
+	recalculateDealValues(partnerInboundMTCServicesMap)
+	recalculateDealValues(partnerInboundSmsServicesMap)
+	recalculateDealValues(partnerInboundDataServicesMap)
+
+	recalculateDealValues(partnerOutboundMOCServicesMap)
+	recalculateDealValues(partnerOutboundMTCServicesMap)
+	recalculateDealValues(partnerOutboundSmsServicesMap)
+	recalculateDealValues(partnerOutboundDataServicesMap)
 
 	// USAGES:
 
@@ -984,22 +991,36 @@ func calculateDelta(services map[string]TelcoService) float64 {
 	return delta
 }
 
-func recalculateDealValues(servicesMap *map[string]TelcoService) {
+func recalculateDealValues(servicesMap map[string]TelcoService) {
 
-	if len(*servicesMap) == 0 {
+	if len(servicesMap) == 0 {
 		return
 	}
 
-	for _, telcoService := range *servicesMap {
+	for serviceName, telcoService := range servicesMap {
+
+		fmt.Printf("TelcoService name %s\n", serviceName)
 
 		shortOfCommitment := telcoService.ShortOfCommitment
 		if shortOfCommitment <= 0 {
+			fmt.Printf("1\n")
 			break
 		}
 
 		dealValue := telcoService.DealValue
+		fmt.Printf("2\n")
 		if dealValue > 0 {
-			telcoService.DealValue = dealValue + shortOfCommitment
+			fmt.Printf("3\n")
+			dealValue = dealValue + shortOfCommitment
+
+			newTelcoService := TelcoService{DealValue: dealValue}
+			newTelcoService.ShortOfCommitment = shortOfCommitment
+			newTelcoService.Usage = telcoService.Usage
+
+			fmt.Printf("NewTelcoService %s: deal value: %f, shortOfCommitment: %f\n", serviceName, newTelcoService.DealValue, newTelcoService.ShortOfCommitment)
+
+			servicesMap[serviceName] = newTelcoService
+
 		}
 	}
 	return
@@ -1034,48 +1055,48 @@ func createMOCServicesMap(input SettlementServices) map[string]TelcoService {
 	videoTelephony := input.Services.Voice.MOC.VideoTelephony
 
 	if backHome != nil {
-		fmt.Printf("backHome: %+v\n", *backHome)
+		// fmt.Printf("backHome: %+v\n", *backHome)
 		voiceServicesMap["MOC Back Home"] = *backHome
 	}
 	if local != nil {
-		fmt.Printf("local: %+v\n", *local)
+		// fmt.Printf("local: %+v\n", *local)
 		voiceServicesMap["MOC Local"] = *local
 	}
 	if premium != nil {
-		fmt.Printf("premium: %+v\n", *premium)
+		// fmt.Printf("premium: %+v\n", *premium)
 		voiceServicesMap["MOC Premium"] = *premium
 	}
 	if international != nil {
-		fmt.Printf("international: %+v\n", *international)
+		// fmt.Printf("international: %+v\n", *international)
 		voiceServicesMap["MOC International"] = *international
 	}
 	if ROW != nil {
-		fmt.Printf("ROW: %+v\n", *ROW)
+		// fmt.Printf("ROW: %+v\n", *ROW)
 		voiceServicesMap["MOC Row"] = *ROW
 	}
 
 	if EU != nil {
-		fmt.Printf("EU: %+v\n", *EU)
+		// fmt.Printf("EU: %+v\n", *EU)
 		voiceServicesMap["MOC EU"] = *EU
 	}
 
 	if EEA != nil {
-		fmt.Printf("EEA: %+v\n", *EEA)
+		// fmt.Printf("EEA: %+v\n", *EEA)
 		voiceServicesMap["MOC EEA"] = *EEA
 	}
 
 	if specialDestinations != nil {
-		fmt.Printf("specialDestinations: %+v\n", *specialDestinations)
+		// fmt.Printf("specialDestinations: %+v\n", *specialDestinations)
 		voiceServicesMap["MOC Special Destinations"] = *specialDestinations
 	}
 
 	if satellite != nil {
-		fmt.Printf("satellite: %+v\n", *satellite)
+		// fmt.Printf("satellite: %+v\n", *satellite)
 		voiceServicesMap["MOC Satellite"] = *satellite
 	}
 
 	if videoTelephony != nil {
-		fmt.Printf("videoTelephony: %+v\n", *videoTelephony)
+		// fmt.Printf("videoTelephony: %+v\n", *videoTelephony)
 		voiceServicesMap["MOC videoTelephony"] = *videoTelephony
 	}
 
@@ -1106,6 +1127,15 @@ func createDataServicesMap(input SettlementServices) map[string]TelcoService {
 	}
 
 	return dataServicesMap
+}
+
+func printTelcoServicesMap(servicesMap map[string]TelcoService) {
+	fmt.Printf("Telco services:\n")
+
+	for serviceName, telcoService := range servicesMap {
+		fmt.Printf("Service %s: deal value: %f, shortOfCommitment: %f\n", serviceName, telcoService.DealValue, telcoService.ShortOfCommitment)
+	}
+
 }
 
 // This function wraps sending of an error in the Error format, and
