@@ -999,28 +999,26 @@ func recalculateDealValues(servicesMap map[string]TelcoService) {
 
 	for serviceName, telcoService := range servicesMap {
 
-		fmt.Printf("TelcoService name %s\n", serviceName)
+		fmt.Printf("recalculateDealValues: service name: %s\n", serviceName)
 
 		shortOfCommitment := telcoService.ShortOfCommitment
 		if shortOfCommitment <= 0 {
-			fmt.Printf("1\n")
-			break
-		}
 
-		dealValue := telcoService.DealValue
-		fmt.Printf("2\n")
-		if dealValue > 0 {
-			fmt.Printf("3\n")
-			dealValue = dealValue + shortOfCommitment
+		} else {
+			dealValue := telcoService.DealValue
 
-			newTelcoService := TelcoService{DealValue: dealValue}
-			newTelcoService.ShortOfCommitment = shortOfCommitment
-			newTelcoService.Usage = telcoService.Usage
+			if dealValue > 0 {
+				dealValue = dealValue + shortOfCommitment
 
-			fmt.Printf("NewTelcoService %s: deal value: %f, shortOfCommitment: %f\n", serviceName, newTelcoService.DealValue, newTelcoService.ShortOfCommitment)
+				newTelcoService := TelcoService{DealValue: dealValue}
+				newTelcoService.ShortOfCommitment = shortOfCommitment
+				newTelcoService.Usage = telcoService.Usage
 
-			servicesMap[serviceName] = newTelcoService
+				fmt.Printf("recalculateDealValues: NewTelcoService %s: deal value: %f, shortOfCommitment: %f\n", serviceName, newTelcoService.DealValue, newTelcoService.ShortOfCommitment)
 
+				servicesMap[serviceName] = newTelcoService
+
+			}
 		}
 	}
 	return
@@ -1136,6 +1134,7 @@ func printTelcoServicesMap(servicesMap map[string]TelcoService) {
 		fmt.Printf("Service %s: deal value: %f, shortOfCommitment: %f\n", serviceName, telcoService.DealValue, telcoService.ShortOfCommitment)
 	}
 
+	fmt.Printf("\n\n")
 }
 
 // This function wraps sending of an error in the Error format, and

@@ -124,9 +124,9 @@ type SettlementServices struct {
 
 // TelcoService defines model for TelcoService.
 type TelcoService struct {
-	DealValue         float64  `json:"dealValue"`
-	ShortOfCommitment float64  `json:"shortOfCommitment"`
-	Usage             *float64 `json:"usage,omitempty"`
+	DealValue         float64 `json:"dealValue"`
+	ShortOfCommitment float64 `json:"shortOfCommitment"`
+	Usage             float64 `json:"usage"`
 }
 
 // Usage defines model for Usage.
