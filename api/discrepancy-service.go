@@ -650,14 +650,7 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	partnerSettlement := req[1]
 
 	// print home settlement
-	prettyJSON, err := json.MarshalIndent(homeSettlement, "", "    ")
-	if err != nil {
-		log.Fatal("Failed to generate json", err)
-	}
-	fmt.Printf("%s\n", string(prettyJSON))
-
-	// fmt.Println(homeSettlement.Header.Context)
-	// fmt.Println(partnerSettlement.Header.Context)
+	printPrettyJson(homeSettlement)
 
 	// SERVICES MAPS:
 	// home inbound
@@ -709,6 +702,7 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	printTelcoServicesMap(homeInboundMOCServicesMap)
 	////
 	recalculateDealValues(homeInboundMOCServicesMap)
+	fmt.Printf("\n\n")
 	////
 	printTelcoServicesMap(homeInboundMOCServicesMap)
 
@@ -1146,4 +1140,12 @@ func sendDiscrepancyError(ctx echo.Context, code int, message string) error {
 	}
 	err := ctx.JSON(code, petErr)
 	return err
+}
+
+func printPrettyJson(v interface{}) {
+	prettyJSON, err := json.MarshalIndent(v, "", "    ")
+	if err != nil {
+		log.Fatal("Failed to generate json", err)
+	}
+	fmt.Printf("%s\n", string(prettyJSON))
 }
