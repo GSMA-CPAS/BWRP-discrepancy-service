@@ -120,6 +120,9 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 	ownUsage := req[0] // assumption: first usage is a home one
 	partnerUsage := req[1]
 
+	printPrettyJson(ownUsage)
+	printPrettyJson(partnerUsage)
+
 	// later on we can get usage aggregations for the settlement discrepancy purpose
 	p.saveUsageReportsToLocalDB(ownUsage, partnerUsage)
 
@@ -323,6 +326,8 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 	}
 
 	report.Outbound = &outbound
+
+	printPrettyJson(report)
 
 	return ctx.JSON(http.StatusOK, report)
 }
@@ -650,14 +655,7 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	partnerSettlement := req[1]
 
 	// print home settlement
-	prettyJSON, err := json.MarshalIndent(homeSettlement, "", "    ")
-	if err != nil {
-		log.Fatal("Failed to generate json", err)
-	}
-	fmt.Printf("%s\n", string(prettyJSON))
-
-	// fmt.Println(homeSettlement.Header.Context)
-	// fmt.Println(partnerSettlement.Header.Context)
+	printPrettyJson(homeSettlement)
 
 	// SERVICES MAPS:
 	// home inbound
@@ -709,6 +707,7 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 	printTelcoServicesMap(homeInboundMOCServicesMap)
 	////
 	recalculateDealValues(homeInboundMOCServicesMap)
+	fmt.Printf("\n\n")
 	////
 	printTelcoServicesMap(homeInboundMOCServicesMap)
 
@@ -1146,4 +1145,12 @@ func sendDiscrepancyError(ctx echo.Context, code int, message string) error {
 	}
 	err := ctx.JSON(code, petErr)
 	return err
+}
+
+func printPrettyJson(v interface{}) {
+	prettyJSON, err := json.MarshalIndent(v, "", "    ")
+	if err != nil {
+		log.Fatal("Failed to generate json", err)
+	}
+	fmt.Printf("%s\n", string(prettyJSON))
 }
