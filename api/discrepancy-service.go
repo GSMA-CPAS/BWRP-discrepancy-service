@@ -120,6 +120,9 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 	ownUsage := req[0] // assumption: first usage is a home one
 	partnerUsage := req[1]
 
+	printPrettyJson(ownUsage)
+	printPrettyJson(partnerUsage)
+
 	// later on we can get usage aggregations for the settlement discrepancy purpose
 	p.saveUsageReportsToLocalDB(ownUsage, partnerUsage)
 
@@ -323,6 +326,8 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 	}
 
 	report.Outbound = &outbound
+
+	printPrettyJson(report)
 
 	return ctx.JSON(http.StatusOK, report)
 }
