@@ -120,9 +120,6 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 	ownUsage := req[0] // assumption: first usage is a home one
 	partnerUsage := req[1]
 
-	printPrettyJson(ownUsage)
-	printPrettyJson(partnerUsage)
-
 	// later on we can get usage aggregations for the settlement discrepancy purpose
 	p.saveUsageReportsToLocalDB(ownUsage, partnerUsage)
 
@@ -895,9 +892,6 @@ func createSubServicesDetails(ownMap, partnerMap map[string]TelcoService, units 
 			fmt.Printf("Own calculation : %f partner calculation %f\n", discrepancyRecord.OwnCalculation, discrepancyRecord.PartnerCalculation)
 			////
 			discrepancyRecord.DeltaCalculationPercent = calculateRelativeDelta64(ownTelcoService.DealValue, partnerTelcoService.DealValue)
-			////
-			fmt.Printf("DeltaCalculationPercent %f\n", discrepancyRecord.DeltaCalculationPercent)
-			////
 			*details = append(*details, discrepancyRecord)
 
 		} else {
