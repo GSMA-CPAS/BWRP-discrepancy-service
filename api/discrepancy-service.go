@@ -468,9 +468,7 @@ func (p *DiscrepancyServer) FindUsages(ctx echo.Context) error {
 }
 
 func (p *DiscrepancyServer) createSubServicesWithUsagesMap(perspective, direction string) map[string]float64 {
-	fmt.Println("createServicesWithUsagesMap")
-	fmt.Println(perspective)
-	fmt.Println(direction)
+	fmt.Printf("createSubServicesWithUsagesMap for %s and %s\n\n", perspective, direction)
 
 	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Server.Connection_String).SetAuth(p.credentials))
 	if err != nil {
@@ -653,6 +651,8 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 
 	// print home settlement
 	printPrettyJson(homeSettlement)
+	// print partner settlement
+	printPrettyJson(partnerSettlement)
 
 	// SERVICES MAPS:
 	// home inbound
@@ -701,12 +701,10 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 
 	// PRECOMMITMENT VALUES BLOCK - RECALCULATE TO POSTCOMMITMENT VALUES
 
-	printTelcoServicesMap(homeInboundMOCServicesMap)
-	////
+	// printTelcoServicesMap(homeInboundMOCServicesMap)
 	recalculateDealValues(homeInboundMOCServicesMap)
-	fmt.Printf("\n\n")
-	////
-	printTelcoServicesMap(homeInboundMOCServicesMap)
+	// fmt.Printf("\n\n")
+	// printTelcoServicesMap(homeInboundMOCServicesMap)
 
 	recalculateDealValues(homeInboundMTCServicesMap)
 	recalculateDealValues(homeInboundSmsServicesMap)
@@ -867,7 +865,7 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 func createSubServicesDetails(ownMap, partnerMap map[string]TelcoService, units string, details *[]SettlementDiscrepancyRecord,
 	ownUsageMap, partnerUsageMap map[string]float64) {
 
-	fmt.Println("createSubServicesDetails")
+	fmt.Println("createSubServicesDetails invoked")
 
 	for key, ownTelcoService := range ownMap {
 		partnerTelcoService := partnerMap[key]
@@ -876,20 +874,20 @@ func createSubServicesDetails(ownMap, partnerMap map[string]TelcoService, units 
 			var discrepancyRecord = SettlementDiscrepancyRecord{}
 			discrepancyRecord.Service = key
 			discrepancyRecord.Unit = units
-			////
+
 			fmt.Printf("key: %s and associoated usages: own = %f, partner = %f\n", key, ownUsageMap[key], partnerUsageMap[key])
-			////
+
 			discrepancyRecord.OwnUsage = ownUsageMap[key]
 			discrepancyRecord.PartnerUsage = partnerUsageMap[key]
 			discrepancyRecord.DeltaUsageAbs = math.Abs(discrepancyRecord.OwnUsage - discrepancyRecord.PartnerUsage)
 			discrepancyRecord.DeltaUsagePercent = calculateRelativeDelta64(discrepancyRecord.OwnUsage, discrepancyRecord.PartnerUsage)
 			////
-			fmt.Printf("DeltaUsageAbs : %f DeltaUsagePercent %f\n", discrepancyRecord.DeltaUsageAbs, discrepancyRecord.DeltaUsagePercent)
+			fmt.Printf("DeltaUsageAbs : %f - DeltaUsagePercent %f\n", discrepancyRecord.DeltaUsageAbs, discrepancyRecord.DeltaUsagePercent)
 			///
 			discrepancyRecord.OwnCalculation = ownTelcoService.DealValue
 			discrepancyRecord.PartnerCalculation = partnerTelcoService.DealValue
 			////
-			fmt.Printf("Own calculation : %f partner calculation %f\n", discrepancyRecord.OwnCalculation, discrepancyRecord.PartnerCalculation)
+			fmt.Printf("Own calculation : %f - partner calculation: %f\n", discrepancyRecord.OwnCalculation, discrepancyRecord.PartnerCalculation)
 			////
 			discrepancyRecord.DeltaCalculationPercent = calculateRelativeDelta64(ownTelcoService.DealValue, partnerTelcoService.DealValue)
 			*details = append(*details, discrepancyRecord)
@@ -992,8 +990,6 @@ func recalculateDealValues(servicesMap map[string]TelcoService) {
 
 	for serviceName, telcoService := range servicesMap {
 
-		fmt.Printf("recalculateDealValues: service name: %s\n", serviceName)
-
 		shortOfCommitment := telcoService.ShortOfCommitment
 		if shortOfCommitment <= 0 {
 
@@ -1007,7 +1003,7 @@ func recalculateDealValues(servicesMap map[string]TelcoService) {
 				newTelcoService.ShortOfCommitment = shortOfCommitment
 				newTelcoService.Usage = telcoService.Usage
 
-				fmt.Printf("recalculateDealValues: NewTelcoService %s: deal value: %f, shortOfCommitment: %f\n", serviceName, newTelcoService.DealValue, newTelcoService.ShortOfCommitment)
+				fmt.Printf("recalculateDealValues: service name %s: new deal value: %f, shortOfCommitment: %f\n", serviceName, newTelcoService.DealValue, newTelcoService.ShortOfCommitment)
 
 				servicesMap[serviceName] = newTelcoService
 
