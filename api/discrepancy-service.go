@@ -701,10 +701,7 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 
 	// PRECOMMITMENT VALUES BLOCK - RECALCULATE TO POSTCOMMITMENT VALUES
 
-	// printTelcoServicesMap(homeInboundMOCServicesMap)
 	recalculateDealValues(homeInboundMOCServicesMap)
-	// fmt.Printf("\n\n")
-	// printTelcoServicesMap(homeInboundMOCServicesMap)
 
 	recalculateDealValues(homeInboundMTCServicesMap)
 	recalculateDealValues(homeInboundSmsServicesMap)
