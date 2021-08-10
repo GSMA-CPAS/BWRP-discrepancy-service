@@ -1,0 +1,8 @@
+# Server configurations
+server:
+  connection_string: mongodb://localhost:27017
+
+# Database credentials
+database:
+  user: "root"
+  pass: "root"

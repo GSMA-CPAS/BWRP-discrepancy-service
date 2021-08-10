@@ -25,15 +25,13 @@ paths:
           description: home usage report ID
           required: true
           schema:
-            type: integer
-            format: int32
+            type: string
         - name: partnerUsageId
           in: query
           description: partner usage report ID
           required: true
           schema:
-            type: integer
-            format: int32
+            type: string
       requestBody:
         description: Home & partner usage reports
         required: true
@@ -94,15 +92,13 @@ paths:
           description: home settlement ID
           required: true
           schema:
-            type: integer
-            format: int32
+            type: string
         - name: partnerSettlementId
           in: query
           description: partner settlement ID
           required: true
           schema:
-            type: integer
-            format: int32
+            type: string
       requestBody:
         description: Home & partner settlements
         required: true
@@ -130,9 +126,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  
-  
-  
+
 components:
   schemas:
     
@@ -188,8 +182,8 @@ components:
           type: string
         usage:
           type: number
-          format: float
-        unit:
+          format: double
+        units:
           type: string
     Error:
       required:
@@ -221,22 +215,22 @@ components:
           type: string
         inbound_own_usage:
           type: number
-          format: float
+          format: double
         inbound_partner_usage:
           type: number
-          format: float
+          format: double
         inbound_discrepancy:
           type: number
-          format: float
+          format: double
         outbound_own_usage:
           type: number
-          format: float
+          format: double
         outbound_partner_usage:
           type: number
-          format: float
+          format: double
         outbound_discrepancy:
           type: number
-          format: float
+          format: double
     
     UsageDiscrepancyData:
       properties:
@@ -250,16 +244,16 @@ components:
           type: string
         own_usage:
           type: number
-          format: float
+          format: double
         partner_usage:
           type: number
-          format: float
+          format: double
         delta_usage_abs:
           type: number
-          format: float
+          format: double
         delta_usage_percent:
           type: number
-          format: float
+          format: double
               
     UsageDiscrepancyReport:
       properties:
@@ -333,27 +327,27 @@ components:
               required:
                 - voice
                 - SMS
-                - Data
+                - data
               properties:
                 voice:
                   type: object
                   properties:
                     MOC:
                       type: object
-                      $ref: '#/components/schemas/MOC'  
+                      $ref: '#/components/schemas/MOC'
                     MTC:
-                      type: number
-                      format: float
+                      type: object
+                      $ref: '#/components/schemas/TelcoService'
                 SMS:
                   type: object
                   properties:
                     MO:
-                      type: number
-                      format: float
+                      type: object
+                      $ref: '#/components/schemas/TelcoService'
                     MT:
-                      type: number
-                      format: float
-                Data:
+                      type: object
+                      $ref: '#/components/schemas/TelcoService'
+                data:
                   type: array
                   items: 
                     $ref: '#/components/schemas/DataService'
@@ -364,31 +358,91 @@ components:
         name:
           type: string
         value:
+          type: object
+          $ref: '#/components/schemas/TelcoService'
+    
+    TelcoService:
+      type: object
+      required:
+          - dealValue
+          - shortOfCommitment
+          - usage
+      properties:
+        dealValue:
           type: number
-          format: float
+          format: double
+        shortOfCommitment:
+          type: number
+          format: double
+        usage:
+          type: number
+          format: double
     
     MOC:
       type: object
       properties:
         local:
-          type: number
-          format: float
+          type: object
+          $ref: '#/components/schemas/TelcoService'
         backHome:
-          type: number
-          format: float
+          type: object
+          $ref: '#/components/schemas/TelcoService'
         international:
-          type: number
-          format: float
+          type: object
+          $ref: '#/components/schemas/TelcoService'
         premium:
-          type: number
-          format: float
+          type: object
+          $ref: '#/components/schemas/TelcoService'
         ROW:
-          type: number
-          format: float
+          type: object
+          $ref: '#/components/schemas/TelcoService'
+        specialDestinations:
+          type: object
+          $ref: '#/components/schemas/TelcoService'
+        EU:
+          type: object
+          $ref: '#/components/schemas/TelcoService'
+        EEA:
+          type: object
+          $ref: '#/components/schemas/TelcoService'
+        satellite:
+          type: object
+          $ref: '#/components/schemas/TelcoService'
+        videoTelephony:
+          type: object
+          $ref: '#/components/schemas/TelcoService'
     
     SettlementDiscrepancyReport:
       type: object
       properties:
+        settlementReport:
+          type: object
+          required:
+            - homeRevenue
+            - partnerRevenue
+            - homeCharges
+            - partnerCharges
+            - homeDeltaCommitment
+            - partnerDeltaCommitment
+          properties:
+            homeRevenue:
+              type: number
+              format: double
+            partnerRevenue:
+              type: number
+              format: double
+            homeCharges:
+              type: number
+              format: double
+            partnerCharges:
+              type: number
+              format: double
+            homeDeltaCommitment:
+              type: number
+              format: double
+            partnerDeltaCommitment:
+              type: number
+              format: double
         homePerspective:
           type: object
           required:
@@ -422,6 +476,10 @@ components:
       required:
         - service
         - unit
+        - own_usage
+        - partner_usage
+        - delta_usage_abs
+        - delta_usage_percent
         - own_calculation
         - partner_calculation
         - delta_calculation_percent
@@ -430,13 +488,25 @@ components:
           type: string
         unit:
           type: string
+        own_usage:
+          type: number
+          format: double
+        partner_usage:
+          type: number
+          format: double
+        delta_usage_abs:
+          type: number
+          format: double
+        delta_usage_percent:
+          type: number
+          format: double
         own_calculation:
           type: number
-          format: float
+          format: double
         partner_calculation:
           type: number
-          format: float
+          format: double
         delta_calculation_percent:
           type: number
-          format: float
+          format: double
           

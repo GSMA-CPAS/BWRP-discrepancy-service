@@ -5,8 +5,8 @@ package api
 
 // DataService defines model for DataService.
 type DataService struct {
-	Name  *string  `json:"name,omitempty"`
-	Value *float32 `json:"value,omitempty"`
+	Name  *string       `json:"name,omitempty"`
+	Value *TelcoService `json:"value,omitempty"`
 }
 
 // Error defines model for Error.
@@ -21,23 +21,28 @@ type Error struct {
 
 // GeneralInfoData defines model for GeneralInfoData.
 type GeneralInfoData struct {
-	InboundDiscrepancy   float32 `json:"inbound_discrepancy"`
-	InboundOwnUsage      float32 `json:"inbound_own_usage"`
-	InboundPartnerUsage  float32 `json:"inbound_partner_usage"`
-	OutboundDiscrepancy  float32 `json:"outbound_discrepancy"`
-	OutboundOwnUsage     float32 `json:"outbound_own_usage"`
-	OutboundPartnerUsage float32 `json:"outbound_partner_usage"`
+	InboundDiscrepancy   float64 `json:"inbound_discrepancy"`
+	InboundOwnUsage      float64 `json:"inbound_own_usage"`
+	InboundPartnerUsage  float64 `json:"inbound_partner_usage"`
+	OutboundDiscrepancy  float64 `json:"outbound_discrepancy"`
+	OutboundOwnUsage     float64 `json:"outbound_own_usage"`
+	OutboundPartnerUsage float64 `json:"outbound_partner_usage"`
 	Service              string  `json:"service"`
 	Unit                 string  `json:"unit"`
 }
 
 // MOC defines model for MOC.
 type MOC struct {
-	ROW           *float32 `json:"ROW,omitempty"`
-	BackHome      *float32 `json:"backHome,omitempty"`
-	International *float32 `json:"international,omitempty"`
-	Local         *float32 `json:"local,omitempty"`
-	Premium       *float32 `json:"premium,omitempty"`
+	EEA                 *TelcoService `json:"EEA,omitempty"`
+	EU                  *TelcoService `json:"EU,omitempty"`
+	ROW                 *TelcoService `json:"ROW,omitempty"`
+	BackHome            *TelcoService `json:"backHome,omitempty"`
+	International       *TelcoService `json:"international,omitempty"`
+	Local               *TelcoService `json:"local,omitempty"`
+	Premium             *TelcoService `json:"premium,omitempty"`
+	Satellite           *TelcoService `json:"satellite,omitempty"`
+	SpecialDestinations *TelcoService `json:"specialDestinations,omitempty"`
+	VideoTelephony      *TelcoService `json:"videoTelephony,omitempty"`
 }
 
 // Settlement defines model for Settlement.
@@ -70,9 +75,13 @@ type Settlement struct {
 
 // SettlementDiscrepancyRecord defines model for SettlementDiscrepancyRecord.
 type SettlementDiscrepancyRecord struct {
-	DeltaCalculationPercent float32 `json:"delta_calculation_percent"`
-	OwnCalculation          float32 `json:"own_calculation"`
-	PartnerCalculation      float32 `json:"partner_calculation"`
+	DeltaCalculationPercent float64 `json:"delta_calculation_percent"`
+	DeltaUsageAbs           float64 `json:"delta_usage_abs"`
+	DeltaUsagePercent       float64 `json:"delta_usage_percent"`
+	OwnCalculation          float64 `json:"own_calculation"`
+	OwnUsage                float64 `json:"own_usage"`
+	PartnerCalculation      float64 `json:"partner_calculation"`
+	PartnerUsage            float64 `json:"partner_usage"`
 	Service                 string  `json:"service"`
 	Unit                    string  `json:"unit"`
 }
@@ -87,22 +96,37 @@ type SettlementDiscrepancyReport struct {
 		Details            []SettlementDiscrepancyRecord `json:"details"`
 		GeneralInformation []SettlementDiscrepancyRecord `json:"general_information"`
 	} `json:"partnerPerspective,omitempty"`
+	SettlementReport *struct {
+		HomeCharges            float64 `json:"homeCharges"`
+		HomeDeltaCommitment    float64 `json:"homeDeltaCommitment"`
+		HomeRevenue            float64 `json:"homeRevenue"`
+		PartnerCharges         float64 `json:"partnerCharges"`
+		PartnerDeltaCommitment float64 `json:"partnerDeltaCommitment"`
+		PartnerRevenue         float64 `json:"partnerRevenue"`
+	} `json:"settlementReport,omitempty"`
 }
 
 // SettlementServices defines model for SettlementServices.
 type SettlementServices struct {
 	Currency string `json:"currency"`
 	Services struct {
-		Data []DataService `json:"Data"`
-		SMS  struct {
-			MO *float32 `json:"MO,omitempty"`
-			MT *float32 `json:"MT,omitempty"`
+		SMS struct {
+			MO *TelcoService `json:"MO,omitempty"`
+			MT *TelcoService `json:"MT,omitempty"`
 		} `json:"SMS"`
+		Data  []DataService `json:"data"`
 		Voice struct {
-			MOC *MOC     `json:"MOC,omitempty"`
-			MTC *float32 `json:"MTC,omitempty"`
+			MOC *MOC          `json:"MOC,omitempty"`
+			MTC *TelcoService `json:"MTC,omitempty"`
 		} `json:"voice"`
 	} `json:"services"`
+}
+
+// TelcoService defines model for TelcoService.
+type TelcoService struct {
+	DealValue         float64 `json:"dealValue"`
+	ShortOfCommitment float64 `json:"shortOfCommitment"`
+	Usage             float64 `json:"usage"`
 }
 
 // Usage defines model for Usage.
@@ -135,8 +159,8 @@ type Usage struct {
 type UsageData struct {
 	HomeTadig    *string  `json:"homeTadig,omitempty"`
 	Service      *string  `json:"service,omitempty"`
-	Unit         *string  `json:"unit,omitempty"`
-	Usage        *float32 `json:"usage,omitempty"`
+	Units        *string  `json:"units,omitempty"`
+	Usage        *float64 `json:"usage,omitempty"`
 	VisitorTadig *string  `json:"visitorTadig,omitempty"`
 	YearMonth    *string  `json:"yearMonth,omitempty"`
 }
@@ -145,10 +169,10 @@ type UsageData struct {
 type UsageDiscrepancyData struct {
 	HTMN              *string  `json:"HTMN,omitempty"`
 	VPMN              *string  `json:"VPMN,omitempty"`
-	DeltaUsageAbs     *float32 `json:"delta_usage_abs,omitempty"`
-	DeltaUsagePercent *float32 `json:"delta_usage_percent,omitempty"`
-	OwnUsage          *float32 `json:"own_usage,omitempty"`
-	PartnerUsage      *float32 `json:"partner_usage,omitempty"`
+	DeltaUsageAbs     *float64 `json:"delta_usage_abs,omitempty"`
+	DeltaUsagePercent *float64 `json:"delta_usage_percent,omitempty"`
+	OwnUsage          *float64 `json:"own_usage,omitempty"`
+	PartnerUsage      *float64 `json:"partner_usage,omitempty"`
 	Service           *string  `json:"service,omitempty"`
 	YearMonth         *string  `json:"yearMonth,omitempty"`
 }
@@ -167,7 +191,7 @@ type CalculateSettlementDiscrepancyJSONBody []Settlement
 type CalculateSettlementDiscrepancyParams struct {
 
 	// partner settlement ID
-	PartnerSettlementId int32 `json:"partnerSettlementId"`
+	PartnerSettlementId string `json:"partnerSettlementId"`
 }
 
 // CalculateUsageDiscrepancyJSONBody defines parameters for CalculateUsageDiscrepancy.
@@ -177,7 +201,7 @@ type CalculateUsageDiscrepancyJSONBody []Usage
 type CalculateUsageDiscrepancyParams struct {
 
 	// partner usage report ID
-	PartnerUsageId int32 `json:"partnerUsageId"`
+	PartnerUsageId string `json:"partnerUsageId"`
 }
 
 // CalculateSettlementDiscrepancyJSONRequestBody defines body for CalculateSettlementDiscrepancy for application/json ContentType.
