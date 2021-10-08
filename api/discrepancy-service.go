@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"math"
 	"net/http"
 	"os"
@@ -17,6 +16,7 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/labstack/echo/v4"
+	log "github.com/sirupsen/logrus"
 	"github.com/tkanos/gonfig"
 	"gopkg.in/yaml.v2"
 
@@ -99,7 +99,7 @@ func processError(err error) {
 }
 
 func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId string, params CalculateUsageDiscrepancyParams) error {
-	fmt.Println("Start: CalculateUsageDiscrepancy")
+	log.Info("Start: CalculateUsageDiscrepancy")
 
 	// retrieve two usage reports from the request body
 	b, err := ioutil.ReadAll(ctx.Request().Body)
@@ -123,8 +123,8 @@ func (p *DiscrepancyServer) CalculateUsageDiscrepancy(ctx echo.Context, usageId 
 	// later on we can get usage aggregations for the settlement discrepancy purpose
 	p.saveUsageReportsToLocalDB(ownUsage, partnerUsage)
 
-	fmt.Println(ownUsage.Header.Context)
-	fmt.Println(partnerUsage.Header.Context)
+	log.Println(ownUsage.Header.Context)
+	log.Println(partnerUsage.Header.Context)
 
 	// create output usage discrepancy report
 	report := UsageDiscrepancyReport{}
@@ -351,7 +351,7 @@ func (p *DiscrepancyServer) saveUsageReportsToLocalDB(home, partner Usage) {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Connected to MongoDB!")
+	log.Info("Connected to MongoDB!")
 
 	collection := client.Database("nomad").Collection("usages")
 
@@ -360,21 +360,24 @@ func (p *DiscrepancyServer) saveUsageReportsToLocalDB(home, partner Usage) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Deleted %v documents in the usages collection\n", deleteResult.DeletedCount)
+
+	log.Printf("Deleted %v documents in the usages collection\n", deleteResult.DeletedCount)
 
 	// insert home usage
 	insertResult, err := collection.InsertOne(context.TODO(), home)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Inserted a Single Document: ", insertResult.InsertedID)
+
+	log.Println("Inserted a Single Document: ", insertResult.InsertedID)
 
 	// insert partner usage
 	insertResult, err = collection.InsertOne(context.TODO(), partner)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Inserted a Single Document: ", insertResult.InsertedID)
+
+	log.Println("Inserted a Single Document: ", insertResult.InsertedID)
 
 	defer client.Disconnect(dbCtx)
 
@@ -415,7 +418,7 @@ func createInOutDetailsRecord(ownUsage, partnerUsage UsageData) UsageDiscrepancy
 }
 
 func (p *DiscrepancyServer) convertUsageDataArrayToMap(arr []UsageData) map[string]UsageData {
-	fmt.Println("Start: convertUsageDataArrayToMap")
+	log.Debug("Start: convertUsageDataArrayToMap")
 
 	// create output map
 	m := make(map[string]UsageData)
@@ -468,7 +471,7 @@ func (p *DiscrepancyServer) FindUsages(ctx echo.Context) error {
 }
 
 func (p *DiscrepancyServer) createSubServicesWithUsagesMap(perspective, direction string) map[string]float64 {
-	fmt.Printf("createSubServicesWithUsagesMap for %s and %s\n\n", perspective, direction)
+	log.Debug("createSubServicesWithUsagesMap for %s and %s\n\n", perspective, direction)
 
 	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Server.Connection_String).SetAuth(p.credentials))
 	if err != nil {
@@ -488,7 +491,7 @@ func (p *DiscrepancyServer) createSubServicesWithUsagesMap(perspective, directio
 		log.Fatal(err)
 	}
 
-	fmt.Println("Connected to MongoDB!")
+	log.Info("Connected to MongoDB!")
 
 	// db.usages.aggregate( [ { $unwind: "$header" }, { $match: { "header.context": "home" } }, { $unwind: "$body.inbound" },
 	// { $group: { _id: "$body.inbound.service", total: { $sum: "$body.inbound.usage" } } } ] )
@@ -528,7 +531,7 @@ func (p *DiscrepancyServer) createSubServicesWithUsagesMap(perspective, directio
 		servicesMap[element.ID] = element.Total
 	}
 
-	fmt.Println(servicesMap)
+	log.Debug(servicesMap)
 
 	defer client.Disconnect(dbCtx)
 
@@ -536,9 +539,9 @@ func (p *DiscrepancyServer) createSubServicesWithUsagesMap(perspective, directio
 }
 
 func (p *DiscrepancyServer) createBearerServicesWithUsagesMap(perspective, direction string) map[string]float64 {
-	fmt.Println("createBearerServicesWithUsagesMap")
-	fmt.Println(perspective)
-	fmt.Println(direction)
+	log.Debug("createBearerServicesWithUsagesMap")
+	log.Info(perspective)
+	log.Info(direction)
 
 	client, err := mongo.NewClient(options.Client().ApplyURI(p.config.Server.Connection_String).SetAuth(p.credentials))
 	if err != nil {
@@ -558,7 +561,7 @@ func (p *DiscrepancyServer) createBearerServicesWithUsagesMap(perspective, direc
 		log.Fatal(err)
 	}
 
-	fmt.Println("Connected to MongoDB!")
+	log.Debug("Connected to MongoDB!")
 
 	// db.usages.aggregate( [ { $unwind: "$header" }, { $match: { "header.context": "home" } }, { $unwind: "$body.inbound" },
 	// { $group: { _id: "$body.inbound.units", total: { $sum: "$body.inbound.usage" } } } ] )
@@ -568,7 +571,7 @@ func (p *DiscrepancyServer) createBearerServicesWithUsagesMap(perspective, direc
 	matchStage := bson.D{{"$match", bson.D{{"header.context", perspective}}}}
 
 	bodyDirection := "$body." + direction
-	fmt.Println(bodyDirection)
+	log.Debug(bodyDirection)
 	bodyDirectionWithUsages := "$body." + direction + ".usage"
 	bodyDirectionWithService := "$body." + direction + ".units"
 
@@ -590,13 +593,13 @@ func (p *DiscrepancyServer) createBearerServicesWithUsagesMap(perspective, direc
 		}
 	}
 
-	fmt.Println(serviceUsages)
+	log.Debug(serviceUsages)
 
 	servicesMap := make(map[string]float64, len(serviceUsages))
 
 	for _, element := range serviceUsages {
-		fmt.Println(element.ID)
-		fmt.Println(element.Total)
+		log.Info(element.ID)
+		log.Info(element.Total)
 		servicesMap[element.ID] = element.Total
 	}
 
@@ -621,7 +624,7 @@ func mergeMaps(bearserServiceUsageMap, subServiceUsageMap map[string]float64) ma
 	}
 
 	for key, element := range bearserServiceUsageMap {
-		fmt.Println("Service:", key, "=>", "Usage:", element)
+		log.Debug("Service:", key, "=>", "Usage:", element)
 	}
 
 	return bearserServiceUsageMap
@@ -862,7 +865,7 @@ func (p *DiscrepancyServer) CalculateSettlementDiscrepancy(ctx echo.Context, set
 func createSubServicesDetails(ownMap, partnerMap map[string]TelcoService, units string, details *[]SettlementDiscrepancyRecord,
 	ownUsageMap, partnerUsageMap map[string]float64) {
 
-	fmt.Println("createSubServicesDetails invoked")
+	log.Debug("createSubServicesDetails invoked")
 
 	for key, ownTelcoService := range ownMap {
 		partnerTelcoService := partnerMap[key]
@@ -872,26 +875,26 @@ func createSubServicesDetails(ownMap, partnerMap map[string]TelcoService, units 
 			discrepancyRecord.Service = key
 			discrepancyRecord.Unit = units
 
-			fmt.Printf("key: %s and associoated usages: own = %f, partner = %f\n", key, ownUsageMap[key], partnerUsageMap[key])
+			log.Debug("key: %s and associoated usages: own = %f, partner = %f\n", key, ownUsageMap[key], partnerUsageMap[key])
 
 			discrepancyRecord.OwnUsage = ownUsageMap[key]
 			discrepancyRecord.PartnerUsage = partnerUsageMap[key]
 			discrepancyRecord.DeltaUsageAbs = math.Abs(discrepancyRecord.OwnUsage - discrepancyRecord.PartnerUsage)
 			discrepancyRecord.DeltaUsagePercent = calculateRelativeDelta64(discrepancyRecord.OwnUsage, discrepancyRecord.PartnerUsage)
 			////
-			fmt.Printf("DeltaUsageAbs : %f - DeltaUsagePercent %f\n", discrepancyRecord.DeltaUsageAbs, discrepancyRecord.DeltaUsagePercent)
+			log.Debug("DeltaUsageAbs : %f - DeltaUsagePercent %f\n", discrepancyRecord.DeltaUsageAbs, discrepancyRecord.DeltaUsagePercent)
 			///
 			discrepancyRecord.OwnCalculation = ownTelcoService.DealValue
 			discrepancyRecord.PartnerCalculation = partnerTelcoService.DealValue
 			////
-			fmt.Printf("Own calculation : %f - partner calculation: %f\n", discrepancyRecord.OwnCalculation, discrepancyRecord.PartnerCalculation)
+			log.Debug("Own calculation : %f - partner calculation: %f\n", discrepancyRecord.OwnCalculation, discrepancyRecord.PartnerCalculation)
 			////
 			discrepancyRecord.DeltaCalculationPercent = calculateRelativeDelta64(ownTelcoService.DealValue, partnerTelcoService.DealValue)
 			*details = append(*details, discrepancyRecord)
 
 		} else {
 			////
-			fmt.Printf("key: %s and associoated usages: own = %f, partner = %f\n", key, ownUsageMap[key], partnerUsageMap[key])
+			log.Debug("key: %s and associoated usages: own = %f, partner = %f\n", key, ownUsageMap[key], partnerUsageMap[key])
 			////
 			if ownUsageMap[key] != 0 || partnerUsageMap[key] != 0 {
 				var discrepancyRecord = SettlementDiscrepancyRecord{}
@@ -903,14 +906,14 @@ func createSubServicesDetails(ownMap, partnerMap map[string]TelcoService, units 
 
 				discrepancyRecord.DeltaUsageAbs = math.Abs(discrepancyRecord.OwnUsage - discrepancyRecord.PartnerUsage)
 				discrepancyRecord.DeltaUsagePercent = calculateRelativeDelta64(discrepancyRecord.OwnUsage, discrepancyRecord.PartnerUsage)
-				fmt.Printf("DeltaUsageAbs : %f DeltaUsagePercent %f\n", discrepancyRecord.DeltaUsageAbs, discrepancyRecord.DeltaUsagePercent)
+				log.Debug("DeltaUsageAbs : %f DeltaUsagePercent %f\n", discrepancyRecord.DeltaUsageAbs, discrepancyRecord.DeltaUsagePercent)
 
 				discrepancyRecord.OwnCalculation = 0
 				discrepancyRecord.PartnerCalculation = 0
-				fmt.Printf("Own calculation : %f partner calculation %f\n", discrepancyRecord.OwnCalculation, discrepancyRecord.PartnerCalculation)
+				log.Debug("Own calculation : %f partner calculation %f\n", discrepancyRecord.OwnCalculation, discrepancyRecord.PartnerCalculation)
 
 				discrepancyRecord.DeltaCalculationPercent = 0
-				fmt.Printf("DeltaCalculationPercent %f\n", discrepancyRecord.DeltaCalculationPercent)
+				log.Debug("DeltaCalculationPercent %f\n", discrepancyRecord.DeltaCalculationPercent)
 
 				*details = append(*details, discrepancyRecord)
 			}
@@ -1000,7 +1003,7 @@ func recalculateDealValues(servicesMap map[string]TelcoService) {
 				newTelcoService.ShortOfCommitment = shortOfCommitment
 				newTelcoService.Usage = telcoService.Usage
 
-				fmt.Printf("recalculateDealValues: service name %s: new deal value: %f, shortOfCommitment: %f\n", serviceName, newTelcoService.DealValue, newTelcoService.ShortOfCommitment)
+				log.Debug("recalculateDealValues: service name %s: new deal value: %f, shortOfCommitment: %f\n", serviceName, newTelcoService.DealValue, newTelcoService.ShortOfCommitment)
 
 				servicesMap[serviceName] = newTelcoService
 
@@ -1015,7 +1018,7 @@ func createMTCServicesMap(input SettlementServices) map[string]TelcoService {
 	MTC := input.Services.Voice.MTC
 
 	if MTC != nil {
-		fmt.Printf("MTC: %+v\n", *MTC)
+		log.Debug("MTC: %+v\n", *MTC)
 		voiceServicesMap["MTC"] = *MTC
 	}
 
@@ -1023,7 +1026,7 @@ func createMTCServicesMap(input SettlementServices) map[string]TelcoService {
 }
 
 func createMOCServicesMap(input SettlementServices) map[string]TelcoService {
-	fmt.Println("MOC services values:")
+	log.Debug("MOC services values:")
 
 	voiceServicesMap := make(map[string]TelcoService, 0)
 
@@ -1114,13 +1117,11 @@ func createDataServicesMap(input SettlementServices) map[string]TelcoService {
 }
 
 func printTelcoServicesMap(servicesMap map[string]TelcoService) {
-	fmt.Printf("Telco services:\n")
+	log.Debug("Telco services:\n")
 
 	for serviceName, telcoService := range servicesMap {
-		fmt.Printf("Service %s: deal value: %f, shortOfCommitment: %f\n", serviceName, telcoService.DealValue, telcoService.ShortOfCommitment)
+		log.Debug("Service %s: deal value: %f, shortOfCommitment: %f\n", serviceName, telcoService.DealValue, telcoService.ShortOfCommitment)
 	}
-
-	fmt.Printf("\n\n")
 }
 
 // This function wraps sending of an error in the Error format, and
@@ -1139,5 +1140,5 @@ func printPrettyJson(v interface{}) {
 	if err != nil {
 		log.Fatal("Failed to generate json", err)
 	}
-	fmt.Printf("%s\n", string(prettyJSON))
+	log.Debug("%s\n", string(prettyJSON))
 }
