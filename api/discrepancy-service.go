@@ -33,6 +33,9 @@ type Configuration struct {
 		Username string `yaml:"user" envconfig:"DB_USER"`
 		Password string `yaml:"pass" envconfig:"DB_PASSWD"`
 	} `yaml:"database"`
+	Logginglevel struct {
+		LoggingLevel string `yaml:"level" envconfig:"DS_LOGGING_LEVEL"`
+	} `yaml:"loglevel"`
 }
 
 type ServiceUsage struct {
@@ -59,6 +62,13 @@ func NewDiscrepancyServer() *DiscrepancyServer {
 	fmt.Printf("DB connection string: %s\n", config.Server.Connection_String)
 	fmt.Printf("DB username:: %s\n", config.Database.Username)
 	fmt.Printf("DB password: %s\n", config.Database.Password)
+
+	fmt.Printf("Logging level: %s\n", config.Logginglevel.LoggingLevel)
+	level, _ := log.ParseLevel(config.Logginglevel.LoggingLevel)
+	fmt.Printf("Logging level: %s\n", level.String())
+
+	// set logging level
+	log.SetLevel(level)
 
 	dbAccessCredentials := options.Credential{
 		// AuthMechanism: "SCRAM-SHA-1",
@@ -609,7 +619,7 @@ func (p *DiscrepancyServer) createBearerServicesWithUsagesMap(perspective, direc
 }
 
 func mergeMaps(bearserServiceUsageMap, subServiceUsageMap map[string]float64) map[string]float64 {
-	fmt.Println("mergeMaps")
+	log.Debug("mergeMaps")
 
 	MTC := "MTC"
 	MOC := "MOC"
