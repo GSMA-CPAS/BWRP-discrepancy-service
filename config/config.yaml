@@ -6,3 +6,7 @@ server:
 database:
   user: "root"
   pass: "root"
+
+# Logging level: trace, debug, info, warn, error, fatal, panic
+loglevel:
+  level: "info"
